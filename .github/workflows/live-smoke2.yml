@@ -4,28 +4,21 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Diagnose live KuponLab
+      - name: Diagnose ESPN history routes
         shell: bash
         run: |
           set -u
-          sleep 25
-          BASE='https://kuponlab.talhaaltintas6110.workers.dev'
-          DATE='2026-09-16'
-          echo '--- LIVE HEALTH ---'
-          curl -sS --max-time 20 "$BASE/api/_health" | jq .
-          echo '--- LIVE FIXTURES ---'
-          fixtures="$(curl -sS --max-time 40 "$BASE/api/fixtures?date=$DATE")"
-          echo "$fixtures" | jq '{ok,source,eventCount:(.events|length),scheduled:([.events[]|select(.status.type=="scheduled")]|length)}'
-          event="$(echo "$fixtures" | jq -c '[.events[]|select(.status.type=="scheduled")][0]')"
-          echo "$event" | jq .
-          home="$(echo "$event" | jq -r '.homeTeam.id')"
-          away="$(echo "$event" | jq -r '.awayTeam.id')"
-          ts="$(echo "$event" | jq -r '.startTimestamp')"
-          event_id="$(echo "$event" | jq -r '.id')"
-          source="$(echo "$event" | jq -r '.dataSource // "auto"')"
-          echo '--- LIVE ANALYZE RAW ---'
-          curl -sS --max-time 60 -w '\nHTTP:%{http_code}\n' "$BASE/api/analyze?home=$home&away=$away&ts=$ts&event=$event_id&source=$source"
-          echo
-          echo '--- RAW ESPN EVENT ---'
-          raw="$(curl -sS --max-time 30 'https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=20260916')"
-          echo "$raw" | jq '.events[] | select(.id=="401914282") | {id,name,league,season,competitions:[.competitions[0]|{id,status,competitors:[.competitors[]|{id,homeAway,team:{id:.team.id,slug:.team.slug,uid:.team.uid,displayName:.team.displayName}}]}]}'
+          sleep 20
+          echo '--- SUMMARY ---'
+          summary="$(curl -sS --max-time 25 'https://site.api.espn.com/apis/site/v2/sports/soccer/all/summary?event=401914282')"
+          echo "$summary" | jq '{league:.header.league,season:.header.season}'
+          slug="$(echo "$summary" | jq -r '.header.league.slug // empty')"
+          echo "SLUG=$slug"
+          echo '--- ALL TEAM SCHEDULE ---'
+          curl -sS --max-time 25 -o /tmp/all.json -w 'HTTP:%{http_code}\n' 'https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/368/schedule?season=2026'
+          head -c 300 /tmp/all.json; echo
+          if [ -n "$slug" ]; then
+            echo '--- LEAGUE TEAM SCHEDULE ---'
+            curl -sS --max-time 25 -o /tmp/league.json -w 'HTTP:%{http_code}\n' "https://site.api.espn.com/apis/site/v2/sports/soccer/$slug/teams/368/schedule?season=2026"
+            jq '{events:(.events|length),team:.team.displayName,league:.league}' /tmp/league.json 2>/dev/null || head -c 500 /tmp/league.json
+          fi
