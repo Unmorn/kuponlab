@@ -1,0 +1,12 @@
+name: live-smoke
+on: [push, workflow_dispatch]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test deployed KuponLab
+        run: |
+          sleep 30
+          curl -fsS --max-time 20 'https://kuponlab.talhaaltintas6110.workers.dev/api/_health'
+          echo
+          curl -fsS --max-time 40 'https://kuponlab.talhaaltintas6110.workers.dev/api/fixtures?date=2026-09-16' | head -c 12000
