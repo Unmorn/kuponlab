@@ -1,6 +1,7 @@
 import analyze from './api/analyze.js';
 import bestPicks from './api/best-picks.js';
 import couponStatus from './api/coupon-status.js';
+import composeScan from './api/compose-scan.js';
 import customCoupon from './api/custom-coupon.js';
 import fixtures from './api/fixtures.js';
 import insights from './api/insights.js';
@@ -22,6 +23,7 @@ const PUBLIC_ROUTES = new Map([
   ['/api/analyze', analyze],
   ['/api/best-picks', bestPicks],
   ['/api/coupon-status', couponStatus],
+  ['/api/compose-scan', composeScan],
   ['/api/custom-coupon', customCoupon],
   ['/api/fixtures', fixtures],
   ['/api/insights', insights],
