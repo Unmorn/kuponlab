@@ -39,10 +39,6 @@ const ADMIN_ROUTES = new Map([
 
 const CACHE_TTLS = new Map([
   ['/api/fixtures', 120],
-  ['/api/analyze', 300],
-  ['/api/insights', 300],
-  ['/api/best-picks', 300],
-  ['/api/custom-coupon', 300],
   ['/api/model-health', 600],
   ['/api/odds-moves', 120]
 ]);
