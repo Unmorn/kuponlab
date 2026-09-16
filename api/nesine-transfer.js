@@ -5,6 +5,7 @@ export default async function(req,res){
   try{
     const picks=Array.isArray(req.body?.picks)?req.body.picks:[];
     if(!picks.length)return res.status(400).json({ok:false,error:"Kupon boş."});
+    if(picks.length>20)return res.status(400).json({ok:false,error:"Nesine aktarımı tek kuponda en fazla 20 seçim destekler."});
     const data=await prepareNesineTransfer(picks);
     return res.json({ok:true,...data})
   }catch(e){return res.status(502).json({ok:false,error:"Nesine transferi hazırlanamadı.",detail:String(e?.message||e)})}

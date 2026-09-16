@@ -1,46 +1,76 @@
 name: live-smoke
+
 on: [push, workflow_dispatch]
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Check browser JavaScript syntax
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          s=Path("public/index.html").read_text()
-          blocks=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S|re.I)
-          Path("/tmp/inline.js").write_text("\n".join(blocks))
-          PY
-          node --check /tmp/inline.js
-          node --check worker.js
-          node --check api/compose-scan.js
-      - name: Test live distributed scan and coupon composer
+
+      - name: Run source checks and unit tests
+        run: npm run verify
+
+      - name: Wait for Cloudflare deployment
         shell: bash
         run: |
           set -euo pipefail
-          sleep 35
           BASE='https://kuponlab.talhaaltintas6110.workers.dev'
-          DATE='2026-09-16'
-          fixtures="$(curl -fsS --max-time 30 "$BASE/api/fixtures?date=$DATE")"
-          echo "$fixtures" | jq '{ok,eventCount:(.events|length)}'
-          echo '[]' > /tmp/items.json
-          for idx in 0 1 2 3; do
-            event="$(echo "$fixtures" | jq -c "[.events[]|select(.status.type==\"scheduled\")][$idx]")"
-            home="$(echo "$event"|jq -r '.homeTeam.id')"; away="$(echo "$event"|jq -r '.awayTeam.id')"
-            ts="$(echo "$event"|jq -r '.startTimestamp')"; eid="$(echo "$event"|jq -r '.id')"; src="$(echo "$event"|jq -r '.dataSource // "auto"')"
-            a="$(curl -fsS --max-time 70 "$BASE/api/analyze?home=$home&away=$away&ts=$ts&event=$eid&source=$src")"
-            echo "$a" | jq '{ok,match:(.analysis.context.teams // null),xg:.analysis.expectedGoals,best:.analysis.bestPick.label,samples:.analysis.historySamples}'
-            jq -n --argjson e "$event" --argjson a "$(echo "$a"|jq '.analysis')" '{event:$e,analysis:$a,marketComparison:($a.marketComparison//{available:false}),product:$a.product}' > /tmp/item.json
-            jq -s '.[0]+[.[1]]' /tmp/items.json /tmp/item.json > /tmp/items2.json && mv /tmp/items2.json /tmp/items.json
+          for attempt in $(seq 1 30); do
+            health="$(curl -fsS --max-time 15 "$BASE/api/_health" || true)"
+            if [ "$(echo "$health" | jq -r '.cloudflareEdition // empty' 2>/dev/null)" = '5.6' ]; then
+              echo "$health" | jq '{ok,cloudflareEdition,modelVersion,database}'
+              exit 0
+            fi
+            sleep 10
           done
-          jq -n --arg date "$DATE" --slurpfile items /tmp/items.json '{mode:"insights",date:$date,extended:true,totalFixtures:88,scheduled:86,items:$items[0]}' > /tmp/body.json
-          curl -fsS --max-time 30 -H 'content-type: application/json' --data-binary @/tmp/body.json "$BASE/api/compose-scan" | tee /tmp/ins.json | jq '{ok,summary,couponProfiles:(.couponSets|keys)}'
-          test "$(jq -r '.summary.analyzed' /tmp/ins.json)" -ge 4
-          jq -n --arg date "$DATE" --slurpfile items /tmp/items.json '{mode:"custom",date:$date,count:3,target:5,items:$items[0]}' > /tmp/custom.json
-          curl -fsS --max-time 30 -H 'content-type: application/json' --data-binary @/tmp/custom.json "$BASE/api/compose-scan" | tee /tmp/custom-out.json | jq '{ok,availableMatches,setsCount:(.sets|length),pickCount:(.coupon.picks|length)}'
-          jq -n --arg date "$DATE" --slurpfile items /tmp/items.json '{mode:"best",date:$date,totalFixtures:88,filters:{group:"all",minOdds:1.1,maxOdds:8,maxRisk:95,minProb:10,limit:10},items:$items[0]}' > /tmp/best.json
-          curl -fsS --max-time 30 -H 'content-type: application/json' --data-binary @/tmp/best.json "$BASE/api/compose-scan" | tee /tmp/best-out.json | jq '{ok,summary,picksCount:(.picks|length)}'
+          echo 'Cloudflare v5.6 deployment was not visible in time.' >&2
+          exit 1
+
+      - name: Test live APIs and coupon CPU path
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://kuponlab.talhaaltintas6110.workers.dev'
+          DATE="$(TZ=Europe/Istanbul date +%F)"
+
+          fixtures="$(curl -fsS --max-time 35 "$BASE/api/fixtures?date=$DATE")"
+          echo "$fixtures" | jq -e 'select(.ok == true) | {ok,eventCount:(.events|length),source}'
+          test "$(echo "$fixtures" | jq '.events|length')" -gt 0
+
+          program="$(curl -fsS --max-time 40 "$BASE/api/iddaa-program?date=$DATE")"
+          echo "$program" | jq -e 'select(.ok == true) | {ok,date,eventCount}'
+
+          FIXTURES="$fixtures" PROGRAM="$program" node --input-type=module <<'NODE' > /tmp/selected.json
+          const fixtures=JSON.parse(process.env.FIXTURES).events||[],program=JSON.parse(process.env.PROGRAM).events||[];
+          const norm=s=>String(s||'').toLocaleLowerCase('tr').replaceAll('ı','i').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\b(fc|cf|sc|fk|sk|ac|afc|club|deportivo|calcio|spor|futbol|football|the)\b/g,' ').replace(/[^a-z0-9çğıöşü]+/gi,' ').replace(/\s+/g,' ').trim();
+          const sim=(a,b)=>{a=norm(a);b=norm(b);if(!a||!b)return 0;if(a===b)return 1;const A=new Set(a.split(' ')),B=new Set(b.split(' '));let n=0;for(const x of A)if(B.has(x))n++;return Math.min(1,n/Math.max(1,new Set([...A,...B]).size)+(a.includes(b)||b.includes(a)?0.3:0))};
+          let selected=null;
+          for(const event of fixtures.filter(x=>x.status?.type==='scheduled'))for(const row of program){const td=Math.abs(Number(row.startTimestamp)-Number(event.startTimestamp));if(td>5400)continue;const score=(sim(event.homeTeam.name,row.home)+sim(event.awayTeam.name,row.away))/2-Math.min(td/5400,.2);if(score>=.5&&(!selected||score>selected.score))selected={event,row,score}}
+          const event=selected?.event||fixtures.find(x=>x.status?.type==='scheduled')||fixtures[0];
+          if(!event)process.exit(2);
+          process.stdout.write(JSON.stringify({...event,iddaaEventId:selected?.row?.eventId||null}));
+          NODE
+
+          home="$(jq -r '.homeTeam.id' /tmp/selected.json)"; away="$(jq -r '.awayTeam.id' /tmp/selected.json)"
+          home_name="$(jq -r '.homeTeam.name' /tmp/selected.json)"; away_name="$(jq -r '.awayTeam.name' /tmp/selected.json)"
+          ts="$(jq -r '.startTimestamp' /tmp/selected.json)"; event_id="$(jq -r '.id' /tmp/selected.json)"; source="$(jq -r '.dataSource // "auto"' /tmp/selected.json)"; iddaa_event="$(jq -r '.iddaaEventId // empty' /tmp/selected.json)"
+          args=(--get "$BASE/api/analyze" --data-urlencode "home=$home" --data-urlencode "away=$away" --data-urlencode "homeName=$home_name" --data-urlencode "awayName=$away_name" --data-urlencode "ts=$ts" --data-urlencode "event=$event_id" --data-urlencode "source=$source")
+          if [ -n "$iddaa_event" ]; then args+=(--data-urlencode "iddaaEvent=$iddaa_event"); fi
+          curl -fsS --max-time 80 "${args[@]}" | tee /tmp/analysis.json | jq -e 'select(.ok == true) | {ok,teams:.analysis.context.teams,samples:.analysis.historySamples,dataStatus:.analysis.dataStatus,iddaa:.analysis.iddaa.matched,best:.analysis.bestPick.label}'
+          test -n "$(jq -r '.analysis.context.teams.home // empty' /tmp/analysis.json)"
+          test -n "$(jq -r '.analysis.context.teams.away // empty' /tmp/analysis.json)"
+
+          DATE="$DATE" node --input-type=module <<'NODE' > /tmp/custom.json
+          const keys=['1','O25','BTTS','DC_1X'];
+          const items=Array.from({length:20},(_,i)=>{const eventId=50000+i;return {event:{id:eventId,startTimestamp:1800000000+i*3600,homeTeam:{name:`Ev ${i}`},awayTeam:{name:`Dep ${i}`},tournament:{name:'Test Lig',uniqueTournament:{id:i%4,name:'Test Lig'}}},analysis:{confidence:82,dataQuality:86,stability:84,marketPerformance:{},catalog:{categories:[{id:'result',items:keys.map((key,j)=>({key,label:['1','2.5 ÜST','KG VAR','1X'][j],title:'Test',family:j===0||j===3?'result':j===1?'goals':'btts',probability:72-j*4,probabilityRaw:(72-j*4)/100,fairOdds:1.5+j*.12,risk:30+j*4,sample:8,marketConfidence:78,iddaa:{available:true,eventId,marketId:eventId*10+j,marketName:'Test',outcomeNo:j+1,outcomeName:['1','Üst','Var','1 ve 0'][j],odd:1.35+((i+j)%6)*.11,mbs:2,fairProbability:.6-j*.04}}))}]}},marketComparison:{available:false}}});
+          process.stdout.write(JSON.stringify({mode:'custom',date:process.env.DATE,count:10,target:30,totalFixtures:20,scheduled:20,items}));
+          NODE
+          curl -fsS --max-time 30 -H 'content-type: application/json' --data-binary @/tmp/custom.json "$BASE/api/compose-scan" | tee /tmp/custom-out.json | jq -e 'select(.ok == true) | {ok,analyzedMatches,availableMatches,setsCount:(.sets|length),pickCount:(.coupon.picks|length),complete:.coupon.complete}'
+          test "$(jq -r '.coupon.picks|length' /tmp/custom-out.json)" -eq 10
+
+          code="$(curl -sS -o /tmp/method.json -w '%{http_code}' -X POST "$BASE/api/fixtures?date=$DATE")"
+          test "$code" = '405'
+          code="$(curl -sS -o /tmp/json.json -w '%{http_code}' -H 'content-type: application/json' --data '{' "$BASE/api/compose-scan")"
+          test "$code" = '400'

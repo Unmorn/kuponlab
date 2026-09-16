@@ -5,6 +5,7 @@ import composeScan from './api/compose-scan.js';
 import customCoupon from './api/custom-coupon.js';
 import fixtures from './api/fixtures.js';
 import insights from './api/insights.js';
+import iddaaProgram from './api/iddaa-program.js';
 import modelHealth from './api/model-health.js';
 import nesineTransfer from './api/nesine-transfer.js';
 import oddsMoves from './api/odds-moves.js';
@@ -27,6 +28,7 @@ const PUBLIC_ROUTES = new Map([
   ['/api/custom-coupon', customCoupon],
   ['/api/fixtures', fixtures],
   ['/api/insights', insights],
+  ['/api/iddaa-program', iddaaProgram],
   ['/api/model-health', modelHealth],
   ['/api/nesine-transfer', nesineTransfer],
   ['/api/odds-moves', oddsMoves]
@@ -39,8 +41,28 @@ const ADMIN_ROUTES = new Map([
   ['/api/performance-range-backfill', performanceRangeBackfill]
 ]);
 
+const ROUTE_METHODS = new Map([
+  ['/api/analyze', ['GET']],
+  ['/api/best-picks', ['GET']],
+  ['/api/coupon-status', ['POST']],
+  ['/api/compose-scan', ['POST']],
+  ['/api/custom-coupon', ['GET']],
+  ['/api/fixtures', ['GET']],
+  ['/api/insights', ['GET']],
+  ['/api/iddaa-program', ['GET']],
+  ['/api/model-health', ['GET']],
+  ['/api/nesine-transfer', ['POST']],
+  ['/api/odds-moves', ['GET']],
+  ['/api/backtest', ['GET', 'POST']],
+  ['/api/global-elo-backfill', ['POST']],
+  ['/api/performance-backfill', ['POST']],
+  ['/api/performance-range-backfill', ['POST']]
+]);
+
 const CACHE_TTLS = new Map([
   ['/api/fixtures', 120],
+  ['/api/analyze', 300],
+  ['/api/iddaa-program', 90],
   ['/api/model-health', 600],
   ['/api/odds-moves', 120]
 ]);
@@ -51,6 +73,8 @@ function json(data, status = 200, headers = {}) {
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store',
+      'x-content-type-options': 'nosniff',
+      'referrer-policy': 'same-origin',
       ...headers
     }
   });
@@ -59,7 +83,10 @@ function json(data, status = 200, headers = {}) {
 async function invoke(handler, request, url) {
   let body = null;
   if (!['GET', 'HEAD'].includes(request.method)) {
-    try { body = await request.json(); } catch { body = null; }
+    const length = Number(request.headers.get('content-length') || 0);
+    if (length > 2_000_000) return json({ ok: false, error: 'İstek gövdesi çok büyük.' }, 413);
+    try { body = await request.json(); }
+    catch { return json({ ok: false, error: 'Geçersiz JSON gövdesi.' }, 400); }
   }
   const query = Object.fromEntries(url.searchParams.entries());
   const req = { query, body, method: request.method, headers: request.headers, url: url.toString() };
@@ -75,7 +102,7 @@ async function invoke(handler, request, url) {
 
 function adminAllowed(request, env) {
   if (!env.ADMIN_TOKEN) return false;
-  const supplied = request.headers.get('x-admin-token') || new URL(request.url).searchParams.get('key') || '';
+  const supplied = request.headers.get('x-admin-token') || '';
   return supplied === env.ADMIN_TOKEN;
 }
 
@@ -89,11 +116,15 @@ async function cachedInvoke(handler, request, url, ctx, ttl) {
   const cache = caches.default;
   const key = new Request(url.toString(), { method: 'GET', headers: { accept: 'application/json' } });
   const hit = await cache.match(key);
-  if (hit) return hit;
+  if (hit) {
+    const headers = new Headers(hit.headers);
+    headers.set('x-kuponlab-edge-cache', 'HIT');
+    return new Response(hit.body, { status: hit.status, headers });
+  }
   const response = await invoke(handler, request, url);
   if (response.ok) {
     const headers = new Headers(response.headers);
-    headers.set('cache-control', `public, max-age=${Math.min(ttl, 60)}, s-maxage=${ttl}`);
+    headers.set('cache-control', `public, max-age=${Math.min(ttl, 60)}, s-maxage=${ttl}, stale-while-revalidate=${Math.max(30, ttl)}`);
     headers.set('x-kuponlab-edge-cache', 'MISS');
     const cacheable = new Response(response.body, { status: response.status, headers });
     ctx.waitUntil(cache.put(key, cacheable.clone()));
@@ -124,7 +155,7 @@ export default {
         return json({
           ok: true,
           app: 'KuponLab',
-          cloudflareEdition: '5.5',
+          cloudflareEdition: '5.6',
           modelVersion: '5.2',
           database: hasDatabase() ? 'd1' : 'stateless',
           time: new Date().toISOString()
@@ -133,6 +164,8 @@ export default {
 
       const publicHandler = PUBLIC_ROUTES.get(url.pathname);
       if (publicHandler) {
+        const allowed = ROUTE_METHODS.get(url.pathname) || ['GET'];
+        if (!allowed.includes(request.method)) return json({ ok: false, error: 'Bu endpoint bu istek yöntemini desteklemiyor.' }, 405, { allow: allowed.join(', ') });
         const ttl = CACHE_TTLS.get(url.pathname) || 0;
         return cachedInvoke(publicHandler, request, url, ctx, ttl);
       }
@@ -140,6 +173,8 @@ export default {
       const adminHandler = ADMIN_ROUTES.get(url.pathname);
       if (adminHandler) {
         if (!adminAllowed(request, env)) return json({ ok: false, error: 'Bu yönetim endpointi kapalı.' }, 404);
+        const allowed = ROUTE_METHODS.get(url.pathname) || ['POST'];
+        if (!allowed.includes(request.method)) return json({ ok: false, error: 'Bu endpoint bu istek yöntemini desteklemiyor.' }, 405, { allow: allowed.join(', ') });
         return invoke(adminHandler, request, url);
       }
 

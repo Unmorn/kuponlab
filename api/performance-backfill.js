@@ -1,6 +1,6 @@
 import { backfillPerformanceDate, gradePendingPredictions, marketPerformanceSummary } from "../lib/performance.js";
 export const access="admin";
-export const methods=["GET"];
+export const methods=["POST"];
 export default async function(req,res){
   const date=String(req.query.date||""),limit=Math.max(1,Math.min(12,Number(req.query.limit||8)));
   try{

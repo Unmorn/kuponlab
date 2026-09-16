@@ -1,6 +1,16 @@
-# KuponLab v5.5 Cloudflare Edition
+# KuponLab v5.6 Cloudflare Edition
 
 KuponLab'ın telefondan kullanılabilen, Hatchable bağımlılığı kaldırılmış Cloudflare Workers sürümü.
+
+## v5.6 düzeltmeleri
+
+- Fikstürler canlı İddaa programıyla tarih, saat ve takım adına göre önceden eşleştirilir; analiz çağrısı doğrudan resmi event kimliğini kullanır.
+- İddaa/config/event çağrılarına tekilleştirme, güvenli timeout ve kısa süreli stale cache eklendi.
+- Özel kupon kombinasyon araması Cloudflare Worker CPU sınırına uygun hâle getirildi; eksik seçim sayısı artık gizlenmez.
+- Hedef oran kuponlarında İddaa event/market/outcome ve MBS bilgileri korunur.
+- Nesine aktarımı canlı bültende tekrar doğrulama yapar; geçersiz seçimi sessizce düşürmez ve bahsi otomatik göndermez.
+- D1 bağlı değilse model sağlığı ve oran hareketi ekranları boş veri yerine özelliğin neden kapalı olduğunu açıkça gösterir.
+- API yöntem doğrulaması, gövde sınırı, güvenlik başlıkları ve otomatik testler eklendi.
 
 ## Ne değişti?
 

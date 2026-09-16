@@ -39,7 +39,7 @@ function insightPack(body,items){
 function customPack(body,items){
   const count=Math.max(2,Math.min(20,Math.round(Number(body.count||8)))),target=Math.max(1.5,Math.min(5000,Number(body.target||10))),seen=new Set(),sets=[];
   for(let v=0;v<5;v++){const c=customCoupon(items,count,target,v),sig=(c.picks||[]).map(p=>p.matchId+":"+p.marketKey).sort().join("|");if(sig&&!seen.has(sig)){seen.add(sig);sets.push(c)}}
-  return {date:String(body.date||""),count,target,sets,coupon:sets[0]||null,availableMatches:items.length}
+  return {date:String(body.date||""),count,target,sets,coupon:sets[0]||null,analyzedMatches:items.length,availableMatches:Math.max(0,...sets.map(x=>Number(x.eligibleMatches||0)))}
 }
 
 function bestPack(body,items){
@@ -65,7 +65,7 @@ function bestPack(body,items){
 }
 
 export default async function(req,res){
-  const body=req.body||{},items=Array.isArray(body.items)?body.items.filter(x=>x?.event&&x?.analysis):[];
+  const body=req.body||{},items=Array.isArray(body.items)?body.items.filter(x=>x?.event&&x?.analysis).slice(0,40):[];
   if(!items.length)return res.status(400).json({ok:false,error:"Analiz listesi boş."});
   try{
     const mode=String(body.mode||"insights");

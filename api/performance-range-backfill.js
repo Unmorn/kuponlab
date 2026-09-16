@@ -1,6 +1,6 @@
 import { backfillPerformanceRange, gradePendingPredictions, marketPerformanceSummary } from "../lib/performance.js";
 export const access="admin";
-export const methods=["GET"];
+export const methods=["POST"];
 export default async function(req,res){
   const from=String(req.query.from||""),days=Math.max(1,Math.min(8,Number(req.query.days||4))),perDay=Math.max(1,Math.min(6,Number(req.query.perDay||3)));
   if(!/^\d{4}-\d{2}-\d{2}$/.test(from))return res.status(400).json({ok:false,error:"Tarih geçersiz."});
