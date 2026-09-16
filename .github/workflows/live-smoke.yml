@@ -1,0 +1,36 @@
+name: KuponLab live smoke test
+
+on:
+  push:
+    paths:
+      - '.github/workflows/live-smoke.yml'
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Cloudflare and test live API
+        shell: bash
+        run: |
+          set -u
+          BASE='https://kuponlab.talhaaltintas6110.workers.dev'
+          DATE='2026-09-16'
+          for i in 1 2 3 4 5 6; do
+            echo "Attempt $i"
+            echo "--- health ---"
+            curl -sS --max-time 20 "$BASE/api/_health" || true
+            echo
+            echo "--- fixtures ---"
+            body="$(curl -sS --max-time 35 -w '
+HTTP:%{http_code}' "$BASE/api/fixtures?date=$DATE" || true)"
+            echo "$body" | head -c 12000
+            echo
+            if echo "$body" | grep -q '"ok":true'; then
+              echo "Fixture API is healthy."
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "Fixture API did not recover in time."
+          exit 1
