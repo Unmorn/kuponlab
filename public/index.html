@@ -362,6 +362,7 @@ button:disabled{opacity:.45;cursor:default;transform:none!important}
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const st={o:0,events:[],filtered:[],match:null,analysis:null,insights:null,modelHealth:null,longInsights:null,longLoading:false,bestData:null,bestLoading:false,bestGroup:"all",bestView:"picks",movesData:null,movesLoading:false,movesGroup:"all",customData:null,customLoading:false,customCount:8,customTarget:10,smartProfile:"balanced",smartVariant:{},trackFilter:"all",marketCat:"result",marketQuery:"",marketIddaaOnly:true,coupon:JSON.parse(localStorage.getItem("kl-coupon")||"[]"),tracked:JSON.parse(localStorage.getItem("kl-tracked")||"[]")};
 let lockedScrollY=0,insightToken=0;
+const scanMemo={date:"",items:[],promise:null,target:0};
 function lockPage(){lockedScrollY=window.scrollY||0;document.body.classList.add("modal-lock");document.body.style.top="-"+lockedScrollY+"px"}
 function unlockPage(){if(!document.body.classList.contains("modal-lock"))return;document.body.classList.remove("modal-lock");document.body.style.top="";window.scrollTo(0,lockedScrollY)}
 const API="/api";
@@ -388,6 +389,32 @@ function apiCacheSet(path,d){try{localStorage.setItem(API_CACHE_PREFIX+path,JSON
 async function api(path,ms=15000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(API+path,{signal:c.signal});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"İstek başarısız");return d}finally{clearTimeout(t)}}
 async function apiCached(path,ttl=300000,ms=15000){const cached=apiCacheGet(path,ttl);if(cached)return cached;if(apiInflight.has(path))return apiInflight.get(path);const task=api(path,ms).then(d=>{apiCacheSet(path,d);return d}).catch(e=>{const stale=apiCacheGet(path,6*60*60*1000);if(stale)return {...stale,_clientStale:true};throw e}).finally(()=>apiInflight.delete(path));apiInflight.set(path,task);return task}
 async function apiPost(path,body,ms=20000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(API+path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body||{}),signal:c.signal});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"İstek başarısız");return d}finally{clearTimeout(t)}}
+function analysisPath(m){return "/analyze?home="+m.homeTeam.id+"&away="+m.awayTeam.id+"&ts="+m.startTimestamp+"&event="+m.id+"&source="+encodeURIComponent(m.dataSource||"auto")}
+async function clientMapLimit(items,limit,fn){const out=new Array(items.length);let n=0;async function w(){while(true){const i=n++;if(i>=items.length)return;try{out[i]=await fn(items[i],i)}catch{out[i]=null}}}await Promise.all(Array.from({length:Math.min(limit,items.length)},()=>w()));return out}
+async function distributedScan(limit=8){
+  const target=date(st.o),wanted=Math.max(1,Math.min(20,Number(limit)||8));
+  if(scanMemo.date!==target){scanMemo.date=target;scanMemo.items=[];scanMemo.promise=null;scanMemo.target=0}
+  if(scanMemo.items.length>=wanted)return scanMemo.items.slice(0,wanted);
+  if(scanMemo.promise){await scanMemo.promise;if(scanMemo.items.length>=wanted)return scanMemo.items.slice(0,wanted)}
+  const events=st.events.filter(e=>e.status?.type==="scheduled").sort((a,b)=>a.startTimestamp-b.startTimestamp).slice(0,wanted),have=new Set(scanMemo.items.map(x=>String(x.event.id))),todo=events.filter(e=>!have.has(String(e.id)));
+  scanMemo.target=Math.max(scanMemo.target,wanted);
+  scanMemo.promise=(async()=>{
+    const rows=(await clientMapLimit(todo,3,async e=>{
+      const d=await apiCached(analysisPath(e),300000,45000);
+      if(!d?.analysis)return null;
+      return {event:e,analysis:d.analysis,marketComparison:d.analysis.marketComparison||{available:false},product:d.analysis.product||null}
+    })).filter(Boolean);
+    const map=new Map(scanMemo.items.map(x=>[String(x.event.id),x]));for(const x of rows)map.set(String(x.event.id),x);
+    scanMemo.items=events.map(e=>map.get(String(e.id))).filter(Boolean)
+  })();
+  try{await scanMemo.promise}finally{scanMemo.promise=null}
+  return scanMemo.items.slice(0,wanted)
+}
+async function composeScan(mode,{limit=8,extended=false,count=8,target=10,filters={}}={}){
+  const items=await distributedScan(limit);
+  if(!items.length)throw new Error("Analiz edilebilen maç bulunamadı.");
+  return apiPost("/compose-scan",{mode,date:date(st.o),extended,count,target,filters,totalFixtures:st.events.length,scheduled:st.events.filter(e=>e.status?.type==="scheduled").length,items},30000)
+}
 function loading(){stateEl.hidden=false;stateEl.innerHTML='<div class="spin"></div><div><b>Fikstür yükleniyor</b><p>En fazla 15 saniye içinde sonuç veya hata göreceksin.</p></div>';retry.hidden=true}
 const stateEl=$("#state"),retry=$("#retry");
 
@@ -403,7 +430,7 @@ async function loadModelHealth(){try{st.modelHealth=await apiCached("/model-heal
 async function loadInsights(){
   const token=++insightToken,target=date(st.o);
   try{
-    const d=await apiCached("/insights?date="+target,600000,45000);if(token!==insightToken||target!==date(st.o))return;st.insights=d;renderInsights()
+    const d=await composeScan("insights",{limit:8,extended:false});if(token!==insightToken||target!==date(st.o))return;st.insights=d;renderInsights()
   }catch(e){
     if(token!==insightToken)return;$("#insTitle").textContent="Günlük tarama tamamlanamadı";$("#insBody").className="";$("#insBody").innerHTML='<div class="muted" style="padding-top:8px">'+esc(e.name==="AbortError"?"Tarama zaman aşımına uğradı.":e.message)+' <button id="retryInsights" class="retry">Tekrar dene</button></div>';$("#retryInsights").onclick=loadInsights
   }
@@ -434,7 +461,7 @@ function renderBest(){
 }
 async function loadBest(){
   st.bestLoading=true;renderBest();const [mn,mx]=String($("#bestOdds").value||"1.2,3").split(",").map(Number),risk=Number($("#bestRisk").value||65);
-  try{st.bestData=await apiCached("/best-picks?date="+date(st.o)+"&group="+encodeURIComponent(st.bestGroup)+"&minOdds="+mn+"&maxOdds="+mx+"&maxRisk="+risk,300000,85000)}
+  try{st.bestData=await composeScan("best",{limit:12,filters:{group:st.bestGroup,minOdds:mn,maxOdds:mx,maxRisk:risk,minProb:45,limit:20}})}
   catch(e){st.bestData={picks:[],performance:[],summary:{},error:e.name==="AbortError"?"Tarama zaman aşımına uğradı.":e.message}}
   finally{st.bestLoading=false;if(st.bestData?.error)$("#bestBody").innerHTML='<div class="bestEmpty">'+esc(st.bestData.error)+'</div>';else renderBest()}
 }
@@ -459,7 +486,7 @@ function openBest(){lockPage();$("#bestDlg").showModal();setBestView(st.bestView
 
 async function analyze(id){
   const m=st.events.find(e=>+e.id===id);if(!m)return;st.match=m;st.marketCat="result";st.marketQuery="";$("#al").textContent=country(m)+" · "+league(m);$("#at").textContent=m.homeTeam.name+" — "+m.awayTeam.name;$("#adt").textContent=tm(m.startTimestamp);$("#ab").innerHTML='<div class="loading"><div class="spin"></div><b>Model v5.2 Ensemble analiz ediyor…</b></div>';lockPage();$("#dlg").showModal();
-  try{const d=await apiCached("/analyze?home="+m.homeTeam.id+"&away="+m.awayTeam.id+"&ts="+m.startTimestamp+"&event="+m.id+"&source="+encodeURIComponent(m.dataSource||"auto"),300000,28000);st.analysis=d.analysis;renderAnalysis()}
+  try{const d=await apiCached(analysisPath(m),300000,45000);st.analysis=d.analysis;renderAnalysis()}
   catch(e){$("#ab").innerHTML='<div class="state"><div><b style="color:var(--danger)">Analiz alınamadı</b><p>'+esc(e.message)+'</p></div></div>'}
 }
 function box(name,s,a,p,l){const line=l?.stability!=null?('%'+l.stability):(l?.historyLineups?'ölçülüyor':'veri yok');return '<div class="stat"><h4>'+esc(name)+'</h4><div class="row"><span>Güç ratingi</span><b>'+Number(p?.rating??50).toFixed(1)+'</b></div><div class="row"><span>Kronolojik Elo</span><b>'+(p?.elo?Number(p.elo).toFixed(0)+' · '+Number(p.eloMatches||0)+' maç':'—')+'</b></div><div class="row"><span>Global güç</span><b>'+(p?.global?Number(p.global).toFixed(0)+' · '+Number(p.globalCoverage||0)+' ağ':'—')+'</b></div><div class="row"><span>Atak Kalitesi*</span><b>'+(a?.sample?Number(a.attack).toFixed(1):'—')+'</b></div><div class="row"><span>Şut / isabetli</span><b>'+(a?.sample?(a.shots+' / '+a.sot):'—')+'</b></div><div class="row"><span>Topa sahip olma</span><b>'+(a?.sample?('%'+a.possession):'—')+'</b></div><div class="row"><span>Kadro sürekliliği</span><b>'+line+'</b></div><div class="row"><span>Gol / maç</span><b>'+s.gf+'</b></div><div class="row"><span>Yediği gol / maç</span><b>'+s.ga+'</b></div><div class="row"><span>Form puanı</span><b>'+s.ppg+'</b></div><div class="row"><span>2.5 Üst</span><b>%'+s.over25+'</b></div><div class="row"><span>KG Var</span><b>%'+s.btts+'</b></div><div class="muted" style="margin-top:7px">* xG değildir; şut, isabetli şut, korner ve possession birleşimidir.</div></div>'}
@@ -675,7 +702,7 @@ const extendedProfiles=new Set(["series5","series8","marathon13","target3","targ
 async function ensureExtended(profile){
   if(!extendedProfiles.has(profile)||st.longInsights||st.longLoading)return;
   st.longLoading=true;renderSmart();
-  try{st.longInsights=await apiCached("/insights?date="+date(st.o)+"&extended=1",600000,75000)}
+  try{st.longInsights=await composeScan("insights",{limit:16,extended:true})}
   catch(e){st.longInsights={error:e.name==="AbortError"?"Geniş tarama zaman aşımına uğradı.":e.message}}
   finally{st.longLoading=false;renderSmart()}
 }
@@ -696,7 +723,7 @@ function nudgeCustom(kind,delta){
 }
 async function buildCustom(){
   const {c,t}=readCustom();st.smartProfile="custom";st.smartVariant.custom=0;st.customLoading=true;st.customData=null;renderSmart();
-  try{st.customData=await apiCached("/custom-coupon?date="+date(st.o)+"&count="+c+"&target="+encodeURIComponent(t),600000,85000)}
+  try{st.customData=await composeScan("custom",{limit:Math.min(20,Math.max(10,c+2)),count:c,target:t})}
   catch(e){st.customData={sets:[],error:e.name==="AbortError"?"Özel kupon taraması zaman aşımına uğradı.":e.message}}
   finally{st.customLoading=false;if(st.customData?.error)$("#smartBody").innerHTML='<div class="empty">'+esc(st.customData.error)+'</div>';else renderSmart()}
 }
