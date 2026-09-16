@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KuponLab</title>
+<style>
+:root{--bg:#0b0f14;--panel:#121821;--panel2:#171e28;--border:#252e3a;--text:#eef2f5;--muted:#8d98a6;--accent:#87c9a3;--accent2:#afd8bd;--danger:#e58a8a;--warn:#d9bd7b;--shadow:0 12px 36px rgba(0,0,0,.18)}
+*{box-sizing:border-box}
+html{background:var(--bg);color-scheme:dark;touch-action:manipulation;-webkit-text-size-adjust:100%}
+body{margin:0;background:linear-gradient(180deg,#0c1117 0%,var(--bg) 360px);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;touch-action:manipulation}
+button,input,select,summary,a,.match,.marketCard,.riskPick,.quickPick,.smartPick,.chipBtn,.marketCat,.tab,.cbtn,.go{touch-action:manipulation}
+button,input,select{font:inherit}button{cursor:pointer}
+.top{position:sticky;top:0;z-index:10;background:rgba(11,15,20,.88);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.055);padding:11px max(14px,calc((100vw - 1080px)/2));display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;gap:10px;align-items:center}.logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#19231e;border:1px solid #2c4435;color:var(--accent2);font-weight:900;font-size:18px}.brand b{font-size:16px;letter-spacing:-.01em}.tiny{font-size:8px;letter-spacing:.13em;color:#6f7b88;font-weight:700;margin-top:1px}
+.topActions{display:flex;gap:6px;align-items:center}.cbtn{border:1px solid var(--border);border-radius:10px;background:#151b23;color:var(--text);padding:9px 11px;font-weight:750;font-size:12px}.cbtn:hover{background:#1a222c}.cbtn span{background:#243129;color:var(--accent2);padding:2px 6px;border-radius:7px;margin-left:5px}.trackBtn{border-color:#384139;color:#c8d9ce}
+main{max-width:1080px;margin:auto;padding:22px 14px 72px}.hero{padding:24px 2px 22px}.ey{font-size:9px;color:var(--accent);letter-spacing:.14em;font-weight:800;text-transform:uppercase}.hero h1{font-size:clamp(31px,6vw,52px);line-height:1.02;letter-spacing:-.045em;margin:8px 0 11px;max-width:720px}.hero h1 span{color:#8f9aa7;font-weight:650}.hero p{margin:0;color:var(--muted);font-size:14px;max-width:620px;line-height:1.55}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}.controls{padding:11px}.dateBar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center;margin-bottom:9px}.dateRail{display:flex;gap:5px;overflow-x:auto;padding:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.dateRail::-webkit-scrollbar{display:none}.dateBtn{min-width:66px;border:1px solid var(--border);background:#10161d;color:#84909c;border-radius:9px;padding:7px 8px;text-align:center;font-size:9px;font-weight:800;white-space:nowrap}.dateBtn b{display:block;font-size:11px;color:#aab4bd;margin-bottom:2px}.dateBtn.on{background:#202a25;border-color:#425447;color:#cce4d5}.dateBtn.on b{color:#d9e9df}.calendarBtn{height:43px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:#151b23;color:#9da9b4;border-radius:9px;padding:0 10px;font-size:9px;font-weight:850;position:relative;overflow:hidden}.calendarBtn input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.search{display:grid;grid-template-columns:1fr 180px;gap:8px}.search input,.search select{height:44px;border:1px solid var(--border);border-radius:10px;background:#0e141b;color:var(--text);padding:0 12px;outline:0;transition:.15s}.search input:focus,.search select:focus{border-color:#415448;box-shadow:0 0 0 3px rgba(135,201,163,.07)}.search input::placeholder{color:#65717f}.meta{display:flex;justify-content:space-between;color:#74808d;font-size:11px;margin-top:9px;padding:0 2px}.retry{background:none;border:0;color:var(--accent);font-weight:750;padding:0}
+.state{margin-top:12px;padding:18px;display:flex;gap:12px;align-items:center}.state p{margin:4px 0 0;color:var(--muted);font-size:12px}.spin{width:20px;height:20px;border:2px solid #87c9a325;border-top-color:var(--accent);border-radius:50%;animation:s .8s linear infinite}@keyframes s{to{transform:rotate(360deg)}}
+.fixtures{display:grid;gap:10px;margin-top:12px}.league{overflow:hidden;box-shadow:none}.lh{padding:11px 13px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:#141a23}.country{color:#81908a;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.lname{font-weight:760;margin-top:2px;font-size:13px}.count{color:#6e7986;font-size:10px}
+.match{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;padding:12px 13px;border-bottom:1px solid #202833;transition:.14s}.match:last-child{border:0}.match:hover{background:#151c25}.time{font-weight:800;font-size:12px;color:#aab3bd;font-variant-numeric:tabular-nums}.teams{display:grid;gap:6px}.team{font-weight:650;font-size:13px;color:#e4e8ec}.team:before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:#5e6874;margin-right:8px;vertical-align:2px}.team:first-child:before{background:var(--accent)}.matchTags{display:flex;gap:5px;flex-wrap:wrap;margin-top:1px}.miniTag{font-size:8px;font-weight:800;border:1px solid #303945;background:#151c24;color:#87939f;border-radius:6px;padding:3px 5px}.miniTag.value{border-color:#4a5f4f;color:#b7d8c0;background:#18221b}.miniTag.coupon{border-color:#4f4734;color:#d7c38c;background:#211e16}.go{border:1px solid #334139;background:#18211c;color:#b8dbc5;padding:8px 10px;border-radius:9px;font-size:10px;font-weight:850;letter-spacing:.04em}.go:hover{background:#1d2a22;border-color:#415548}
+dialog{width:min(760px,96vw);max-height:92dvh;border:1px solid var(--border);border-radius:16px;background:#0f141b;color:var(--text);padding:0;box-shadow:0 30px 90px rgba(0,0,0,.5);overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(3px)}body.modal-lock{position:fixed;width:100%;overflow:hidden}.dlg{padding:16px}.dh{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:12px}.dh h2{margin:4px 0;font-size:20px;letter-spacing:-.02em}.x{width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:#151c25;color:#9ba6b2;font-size:21px}.loading{min-height:210px;display:flex;align-items:center;justify-content:center;gap:11px}
+.analysisSummary{margin-top:14px;border:1px solid #314038;background:linear-gradient(180deg,#17211b,#141a18);border-radius:14px;padding:14px}.summaryTop{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.summaryLabel{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:#839087;font-weight:850}.summaryPick{font-size:25px;letter-spacing:-.03em;font-weight:900;margin-top:3px;color:#eef5f0}.summaryProb{text-align:right}.summaryProb b{display:block;font-size:29px;line-height:1;color:#c9e1d2}.summaryProb span{font-size:9px;color:#77847c}.summaryMeta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.summaryMetric{border-top:1px solid #29342e;padding-top:9px}.summaryMetric span{display:block;font-size:9px;color:#748078;text-transform:uppercase;letter-spacing:.05em}.summaryMetric b{display:block;margin-top:2px;font-size:13px;color:#d9e1dc}.confTrack{height:6px;background:#202833;border-radius:99px;overflow:hidden;margin-top:7px}.confFill{height:100%;background:linear-gradient(90deg,#6fae89,#9bcbb0);border-radius:99px}.miniTitle{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#7d8996;margin:14px 1px 7px;font-weight:850}.topPicks{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.topPick{border:1px solid var(--border);background:#141a22;border-radius:10px;padding:9px;text-align:left;color:var(--text)}.topPick:hover{background:#18211d;border-color:#3c5144}.topPick .rank{font-size:8px;color:#718078;font-weight:800}.topPick strong{display:block;font-size:11px;margin:2px 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.topPick b{font-size:17px;color:#c7ddd0}.formbox{border:1px solid var(--border);border-radius:11px;background:#121821;padding:10px;display:grid;gap:10px;overflow:hidden}.formteam{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}.formteam>span{font-size:11px;font-weight:750;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.formdots{display:flex;gap:4px;min-width:0}.fr{width:29px;height:36px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:900;line-height:1}.fr.g{background:#1f3328;color:#a9d7b8;border:1px solid #355a44}.fr.b{background:#2a2b24;color:#dacb96;border:1px solid #4d4935}.fr.m{background:#302023;color:#e0a1a1;border:1px solid #56363a}.scoremini{position:static;margin-top:4px;font-size:7px;color:#87918b;font-weight:700}.detail{border:1px solid var(--border);border-radius:11px;background:#121821;margin-top:8px;overflow:hidden}.detail summary{list-style:none;cursor:pointer;padding:12px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:780;color:#dbe1e6}.detail summary::-webkit-details-marker{display:none}.detail summary:after{content:"+";color:#7f8b98;font-size:18px;font-weight:500}.detail[open] summary:after{content:"−"}.detail[open] summary{border-bottom:1px solid var(--border)}.detailHint{font-size:9px;color:#75808c;font-weight:650;margin-left:auto;margin-right:9px}.detailBody{padding:10px}.markets{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.market{border:1px solid var(--border);background:#141a22;color:var(--text);border-radius:10px;padding:10px;text-align:left;transition:.14s}.market:hover{background:#18202a}.market.sel{border-color:#56715f;background:#18241d;box-shadow:inset 0 0 0 1px #2e4938}.ml{color:#87929f;font-size:9px;font-weight:800;line-height:1.25}.mp{font-size:19px;font-weight:850;color:#c7ddd0;margin-top:4px}.marketExplorer{margin-top:8px}.marketTop{display:flex;gap:7px;align-items:center;margin-bottom:8px}.marketSearch{flex:1;height:38px;border:1px solid var(--border);background:#0f151c;color:var(--text);border-radius:9px;padding:0 10px;outline:0;font-size:10px}.marketCount{font-size:9px;color:#74808c;white-space:nowrap}.marketTabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:7px;scrollbar-width:none}.marketTabs::-webkit-scrollbar{display:none}.marketCat{border:1px solid #29333e;background:#141a22;color:#84909c;border-radius:8px;padding:7px 9px;font-size:9px;font-weight:850;white-space:nowrap}.marketCat.on{border-color:#496151;background:#1b2820;color:#c9e3d2}.marketCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.marketCard{border:1px solid var(--border);background:#141a22;color:var(--text);border-radius:11px;padding:10px;text-align:left;min-width:0}.marketCard:hover{background:#19212a}.marketCard.sel{border-color:#56715f;background:#18241d}.marketCardTop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.marketCard strong{font-size:11px;line-height:1.25;display:block;min-width:0}.marketProb{font-size:16px;font-weight:900;color:#c8ddd0;white-space:nowrap}.marketInfo{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.marketInfo span{font-size:8px;color:#7d8995;border:1px solid #29333e;border-radius:6px;padding:3px 5px}.marketInfo .realOdds{color:#b9d8c1;border-color:#395044}.marketInfo .fairOdds{color:#d3c28b;border-color:#50462f}.marketInfo .lineupOk{color:#a9d5b6;border-color:#365341}.marketInfo .lineupProb{color:#cdbd84;border-color:#51472f}.marketEmpty{padding:20px;text-align:center;color:#77838f;font-size:10px}.quickPicks{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.quickPick{border:1px solid var(--border);background:#141a22;color:var(--text);border-radius:10px;padding:9px;text-align:left}.quickPick small{display:block;color:#718078;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.quickPick strong{display:block;font-size:10px;margin:4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.quickPick b{font-size:15px;color:#c7ddd0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.stat{border:1px solid var(--border);background:#121821;border-radius:11px;padding:11px}.stat h4{margin:0 0 8px;font-size:13px}.row{display:flex;justify-content:space-between;color:#7f8a97;font-size:11px;padding:4px 0}.row b{color:#d8dde2;font-weight:700}.reasons{color:#87929f;font-size:12px;line-height:1.55}.reasons h3{color:#dce1e6}.reasons ul{padding-left:18px}
+.drawer{position:fixed;top:0;right:0;z-index:40;width:min(390px,94vw);height:100dvh;background:#0f141b;border-left:1px solid var(--border);padding:15px;transform:translateX(102%);transition:.2s;display:flex;flex-direction:column;box-shadow:-20px 0 55px rgba(0,0,0,.35)}.drawer.open{transform:none}.scrim{position:fixed;inset:0;z-index:35;background:rgba(0,0,0,.62);display:none}.scrim.on{display:block}.dhead{display:flex;justify-content:space-between}.dhead h2{font-size:20px}.list{flex:1;overflow:auto;padding:11px 0}.pick{border:1px solid var(--border);border-radius:10px;padding:11px;margin-bottom:7px;background:#141a22}.pick strong{display:block;font-size:13px;margin:2px 0 7px}.pick b{color:#bcd8c6;font-size:12px}.muted{color:#788491;font-size:10px}.empty{text-align:center;color:#7d8895;padding:24px}.danger{width:100%;border:1px solid #472d31;border-radius:10px;padding:10px;background:#1d1518;color:#d99494;font-weight:750}
+.insights{margin-top:12px;padding:13px;box-shadow:none}.insHead{display:flex;justify-content:space-between;align-items:center;gap:12px}.insHead h3{margin:3px 0 0;font-size:16px}.smartBtn{border:1px solid #3b5244;background:#1b2920;color:#c9e3d2;border-radius:10px;padding:9px 11px;font-weight:850;font-size:11px;white-space:nowrap}.smartBtn:hover{background:#213127}.insLoading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px;padding:11px 0 2px}.summaryGrid2{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:11px}.sumBox{background:#0f151c;border:1px solid #222c36;border-radius:10px;padding:9px}.sumBox b{display:block;font-size:18px;color:#e1e7e4}.sumBox span{display:block;font-size:9px;color:#73808d;margin-top:2px}.modelHealthStrip{margin-top:8px;border:1px solid #29343e;background:#10171e;border-radius:9px;padding:8px 9px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.modelHealthStrip b{font-size:10px;color:#c8ddd0}.modelHealthStrip span{font-size:9px;color:#778491}.oppTitle{font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.07em;color:#788592;margin:13px 0 7px}.oppList{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.opp{border:1px solid var(--border);background:#141a22;border-radius:11px;padding:10px;text-align:left;color:var(--text)}.opp:hover{background:#18202a}.oppMatch{font-size:10px;color:#8894a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.oppPick{font-size:13px;font-weight:850;margin:5px 0}.oppMeta{display:flex;justify-content:space-between;gap:6px;font-size:9px;color:#74808c}.oppMeta b{color:#bcd8c6}.moveDown{color:#9ed1ad}.moveUp{color:#db9c9c}.tag{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:99px;padding:4px 7px;font-size:9px;font-weight:800}.tag.good{border-color:#365341;background:#19271e;color:#a9d5b6}.tag.caution{border-color:#554c32;background:#272319;color:#d9c385}.tag.skip{border-color:#513236;background:#281a1d;color:#d99b9b}.altGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.altBtn{border:1px solid var(--border);background:#131a22;color:var(--text);border-radius:10px;padding:9px;text-align:left}.altBtn small{display:block;color:#77838f;font-size:8px;margin-bottom:3px}.altBtn b{font-size:11px}.altBtn span{float:right;color:#bcd8c6;font-size:11px}.riskSection{display:grid;gap:10px}.riskGroup{border:1px solid #2b3139;background:#10161d;border-radius:11px;padding:10px}.riskGroupHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.riskGroupHead b{font-size:11px}.riskGroupHead span{font-size:8px;color:#75818d}.riskGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.riskPick{border:1px solid #2a333d;background:#151c25;color:var(--text);border-radius:10px;padding:9px;text-align:left}.riskPick:hover{background:#1a222c}.riskPick.sel{border-color:#6b5840;background:#241f18}.riskPick strong{display:block;font-size:11px;margin-bottom:6px}.riskNums{display:grid;grid-template-columns:1fr 1fr;gap:5px}.riskNum span{display:block;font-size:7px;color:#737f8b;text-transform:uppercase}.riskNum b{display:block;font-size:11px;margin-top:2px}.riskBadge{margin-top:7px;font-size:8px;color:#d9bd7b}.fairNote{font-size:9px;color:#7f8b96;line-height:1.45;margin-top:8px}.couponHealth{border:1px solid var(--border);background:#121821;border-radius:11px;padding:11px;margin-top:9px}.healthTop{display:grid;grid-template-columns:1fr 1fr;gap:8px}.healthCell span{display:block;color:#74808c;font-size:9px;text-transform:uppercase}.healthCell b{display:block;margin-top:3px;font-size:18px}.warnList{margin-top:8px;display:grid;gap:5px}.warnItem{font-size:10px;color:#d0b47b;background:#251f16;border:1px solid #443921;border-radius:8px;padding:7px}.pickMeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;font-size:9px;color:#82909b}.pickMeta span{border:1px solid #29333d;border-radius:7px;padding:3px 5px}.smartTabs{display:flex;gap:5px;padding:3px;background:#0e141b;border:1px solid var(--border);border-radius:10px;margin:12px 0}.smartTab{flex:1;border:0;background:transparent;color:#82909c;border-radius:7px;padding:8px 6px;font-size:10px;font-weight:800}.smartTab.on{background:#202a25;color:#cce4d5}.smartExtras{border:1px solid var(--border);background:#111820;border-radius:10px;padding:9px;margin:8px 0}.customGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.customField>span{display:block;font-size:8px;color:#74808c;text-transform:uppercase;margin-bottom:5px}.stepper{display:grid;grid-template-columns:34px 1fr 34px;gap:5px;align-items:center}.stepper button{height:36px;border:1px solid #33403a;background:#172019;color:#c9e3d2;border-radius:8px;font-size:18px;font-weight:850}.stepper input{width:100%;height:36px;border:1px solid var(--border);background:#0f151c;color:var(--text);border-radius:8px;text-align:center;font-size:14px;font-weight:850;outline:0}.customHint{font-size:9px;color:#8a97a3;margin-top:8px;line-height:1.4}.customApply{margin-top:8px}.customBuild .applySmart{margin-top:8px}.smartExtrasTop{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px}.smartExtrasTop b{font-size:10px}.smartExtrasTop span{font-size:8px;color:#74808c}.chipRow{display:flex;gap:5px;flex-wrap:wrap}.chipBtn{border:1px solid #2b3540;background:#151c24;color:#9aa6b2;border-radius:8px;padding:6px 8px;font-size:9px;font-weight:800}.chipBtn.on{border-color:#496151;background:#1b2820;color:#c9e3d2}.bankoBtn{border:1px solid #4e4631;background:#211e16;color:#d9c586;border-radius:7px;padding:4px 6px;font-size:8px;font-weight:850}.bankoBtn.on{background:#332b17;border-color:#75663b}.systemBox{border:1px solid var(--border);background:#111820;border-radius:10px;padding:9px;margin-top:8px}.systemBox b{font-size:10px}.systemGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:7px}.systemItem{border:1px solid #28323d;border-radius:8px;padding:7px;background:#141a22}.systemItem span{display:block;font-size:8px;color:#75818c}.systemItem strong{display:block;font-size:12px;margin-top:2px}.smartCouponList{display:grid;gap:7px}.smartToolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 8px}.smartRecipe{min-width:0}.smartRecipe span{display:block;font-size:8px;color:#6f7c88;text-transform:uppercase;letter-spacing:.06em}.smartRecipe b{display:block;font-size:11px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.refreshSmart{border:1px solid #3b5244;background:#18231c;color:#c8e0d0;border-radius:9px;padding:8px 10px;font-size:9px;font-weight:900;white-space:nowrap}.refreshSmart:disabled{opacity:.4;cursor:not-allowed}.mixRow{display:flex;gap:5px;flex-wrap:wrap;margin:7px 0 9px}.mixPill{font-size:8px;border:1px solid #2b3540;border-radius:7px;padding:4px 6px;color:#87949f;background:#121820}.smartPick{border:1px solid var(--border);border-radius:10px;background:#141a22;padding:10px}.smartPick strong{display:block;font-size:12px;margin:3px 0 6px}.smartPickTop{display:flex;justify-content:space-between;gap:8px}.smartPickTop b{color:#c7ddd0}.smartWhy{font-size:9px;color:#75818d;line-height:1.4;margin-top:7px;padding-top:7px;border-top:1px solid #222b35}.smartSource{display:inline-flex;align-items:center;border-radius:6px;padding:3px 5px;font-size:8px;font-weight:800;border:1px solid #303a44}.smartSource.real{color:#b7d8c0;border-color:#3b5143}.smartSource.fair{color:#d4c184;border-color:#54482e}.applySmart{width:100%;margin-top:10px;border:1px solid #3b5244;background:#1b2920;color:#c9e3d2;border-radius:10px;padding:10px;font-weight:850}.subtleBtn{border:1px solid var(--border);background:#141a22;color:#aeb8c2;border-radius:8px;padding:5px 7px;font-size:9px;font-weight:750}.saveTrack{width:100%;border:1px solid #3b5244;background:#1b2920;color:#c9e3d2;border-radius:10px;padding:10px;font-weight:850;margin-bottom:7px}.saveTrack:disabled{opacity:.42;cursor:not-allowed}.trackStats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}.trackStat{border:1px solid var(--border);background:#121821;border-radius:10px;padding:9px}.trackStat span{display:block;font-size:8px;color:#73808d;text-transform:uppercase}.trackStat b{display:block;font-size:17px;margin-top:3px}.perfList{display:grid;gap:7px}.perfRow{border:1px solid var(--border);background:#121821;border-radius:10px;padding:10px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.perfRow strong{font-size:11px}.perfRow small{display:block;color:#75818d;font-size:9px;margin-top:3px}.perfRate{font-size:16px;font-weight:900;color:#c8ddd0}.trackList{display:grid;gap:9px}.trackCard{border:1px solid var(--border);background:#121821;border-radius:12px;padding:11px}.trackHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.trackHead strong{font-size:12px}.trackStatus{font-size:9px;font-weight:850;border-radius:99px;padding:4px 7px;border:1px solid var(--border)}.trackStatus.active{color:#d8c27f;border-color:#4f4630;background:#241f16}.trackStatus.won{color:#a9d7b8;border-color:#355a44;background:#1b2b21}.trackStatus.lost{color:#e0a1a1;border-color:#56363a;background:#2a1c1f}.trackPicks{display:grid;gap:5px;margin-top:9px}.trackPick{display:grid;grid-template-columns:18px 1fr auto;gap:7px;align-items:center;font-size:10px;border-top:1px solid #202833;padding-top:6px}.trackPick:first-child{border-top:0;padding-top:0}.trackPick em{font-style:normal}.trackPick small{color:#75818d}.trackTools{display:flex;gap:6px;margin-top:9px}.refreshTrack{border:1px solid #35463b;background:#172019;color:#bad8c3;border-radius:9px;padding:8px 9px;font-size:9px;font-weight:850}.deleteTrack{border:1px solid #493035;background:#21181a;color:#d49a9a;border-radius:9px;padding:8px 9px;font-size:9px;font-weight:800}.trackTabs{display:flex;gap:5px;margin:10px 0}.trackTab{border:1px solid var(--border);background:#141a22;color:#82909c;border-radius:8px;padding:7px 9px;font-size:9px;font-weight:800}.trackTab.on{background:#202a25;color:#cce4d5}.trackEmpty{border:1px dashed #2b3540;border-radius:11px;padding:22px;text-align:center;color:#7d8995;font-size:11px}
+footer{max-width:1080px;margin:auto;padding:24px 14px 42px;color:#68737f;font-size:10px;border-top:1px solid #202833}
+@media(max-width:650px){.top{padding:10px 12px}.brand .tiny{display:none}.logo{width:34px;height:34px}.topActions{gap:4px}.cbtn{font-size:10px;padding:8px 8px}.hero{padding:18px 2px 18px}.hero h1{font-size:32px}.hero p{font-size:13px}.search{grid-template-columns:1fr}.match{grid-template-columns:48px 1fr}.go{grid-column:2;justify-self:start;margin-top:1px}.stats{grid-template-columns:1fr}.dlg{padding:13px 12px 16px}dialog{width:100%;max-width:none;max-height:88dvh;margin:auto 0 0 0;border-radius:20px 20px 0 0;border-left:0;border-right:0;border-bottom:0}.dh{position:sticky;top:0;background:#0f141b;z-index:2;padding-top:2px}.dh h2{font-size:18px}.summaryPick{font-size:22px}.summaryProb b{font-size:26px}.topPick{padding:8px 7px}.topPick strong{font-size:10px}.topPick b{font-size:16px}.formteam{grid-template-columns:minmax(0,1fr) auto}.formdots{gap:3px}.fr{width:27px;height:34px}.detailBody{padding:8px}.summaryGrid2{grid-template-columns:repeat(2,1fr)}.oppList{grid-template-columns:1fr}.riskGrid{grid-template-columns:repeat(2,1fr)}.quickPicks{grid-template-columns:repeat(2,1fr)}.marketCards{grid-template-columns:1fr}.insHead{align-items:flex-start}.smartBtn{padding:8px 9px}.altGrid{grid-template-columns:1fr}.healthTop{grid-template-columns:1fr 1fr}}
+
+/* v40 sade tema */
+:root{
+  --bg:#f3f6f7;--panel:#ffffff;--panel2:#f8fafb;--border:#d9e1e4;
+  --text:#18262b;--muted:#6f7d83;--accent:#2f6f77;--accent2:#2f6f77;
+  --danger:#b84d56;--warn:#9a7629;--shadow:none
+}
+html{background:var(--bg);color-scheme:light}
+body{background:var(--bg);color:var(--text)}
+.top{
+  background:#2f6f77;backdrop-filter:none;border-bottom:0;
+  padding:11px max(14px,calc((100vw - 1080px)/2));color:#fff
+}
+.logo{background:#fff;color:#2f6f77;border:0;border-radius:7px}
+.brand b{color:#fff}.tiny{color:#cfe4e7}
+.cbtn,.trackBtn{
+  border:1px solid rgba(255,255,255,.32);background:rgba(255,255,255,.08);
+  color:#fff;border-radius:8px;box-shadow:none
+}
+.cbtn:hover{background:rgba(255,255,255,.14)}
+.cbtn span{background:#fff;color:#2f6f77;border-radius:5px}
+main{padding-top:16px}
+.hero{padding:14px 2px 16px}
+.hero h1{font-size:clamp(28px,5vw,44px);margin:5px 0 7px;letter-spacing:-.035em}
+.hero h1 span{color:#607278}.hero p{font-size:13px;color:#718086}
+.ey{color:#2f6f77;letter-spacing:.11em}
+.card{background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:none}
+.controls{padding:10px}
+.dateBtn{background:#fff;border-color:#d8e0e3;color:#66757b;border-radius:7px}
+.dateBtn b{color:#344b52}.dateBtn.on{background:#e5f0f2;border-color:#6e9da3;color:#285d64}
+.dateBtn.on b{color:#285d64}
+.calendarBtn{background:#fff;border-color:#d8e0e3;color:#44575d;border-radius:7px}
+.search input,.search select{
+  background:#fff;color:#1f3035;border-color:#d7e0e3;border-radius:7px
+}
+.search input:focus,.search select:focus{border-color:#6c9da3;box-shadow:0 0 0 2px #e3eff1}
+.meta{color:#7e8c91}
+.retry{color:#2f6f77}
+.state{background:#fff}
+.spin{border-color:#d6e5e7;border-top-color:#2f6f77}
+.league{border-radius:8px}
+.lh{background:#edf3f4;border-bottom:1px solid #d8e1e3;padding:9px 12px}
+.country{color:#628086}.lname{color:#24383e;font-size:12px}.count{color:#7d8b90}
+.match{background:#fff;border-bottom:1px solid #e6ebed;padding:11px 12px}
+.match:hover{background:#f8fafb}
+.time{color:#4f646a}.team{color:#24353a}.team:before{background:#a7b3b6}.team:first-child:before{background:#2f6f77}
+.miniTag{background:#f3f6f7;border-color:#dfe5e7;color:#6b7a80}
+.miniTag.value{background:#edf6ef;border-color:#c8ddcd;color:#477252}
+.miniTag.coupon{background:#f8f4e9;border-color:#e3d8b6;color:#8b6f28}
+.go{background:#2f6f77;border:0;color:#fff;border-radius:6px;padding:8px 11px}
+.go:hover{background:#285f66}
+
+.insights{padding:11px}.insHead h3{font-size:15px;color:#263a40}
+.smartBtn{background:#178a15;border:0;color:#fff;border-radius:7px}
+.smartBtn:hover{background:#147c13}
+.summaryGrid2{gap:5px}.sumBox{background:#f7f9fa;border:0;border-radius:7px;padding:8px}
+.sumBox b{font-size:16px;color:#23373c}.sumBox span{color:#7d8b90}
+.modelHealthStrip{background:#f5f8f8;border:0;border-radius:7px}
+.modelHealthStrip b{color:#2f6f77}.modelHealthStrip span{color:#738187}
+.opp{background:#fff;border-color:#dde5e7;border-radius:8px}.opp:hover{background:#f8fafb}
+.oppMatch{color:#6f7f85}.oppPick{color:#24383e}.oppMeta{color:#78868b}.oppMeta b{color:#2f6f77}
+
+dialog{
+  background:#fff;color:#18262b;border:1px solid #d9e1e4;border-radius:12px;
+  box-shadow:0 18px 60px rgba(28,49,55,.16)
+}
+dialog::backdrop{background:rgba(25,39,44,.38);backdrop-filter:none}
+.dlg{padding:15px}.dh{border-bottom:1px solid #e1e7e9;background:#fff}
+.dh h2{color:#1d3036}.x{background:#f5f7f8;border-color:#dbe3e5;color:#6b7a80;border-radius:7px}
+.analysisSummary{background:#f3f8f9;border:0;border-radius:9px;padding:12px}
+.summaryLabel{color:#6d7e83}.summaryPick{color:#17363b}.summaryProb b{color:#2f6f77}
+.summaryProb span,.summaryMetric span{color:#77878b}
+.summaryMetric{border-top-color:#dbe6e8}.summaryMetric b{color:#24383e}
+.confTrack{background:#dfe7e9}.confFill{background:#2f6f77}
+.miniTitle{color:#718187;margin-top:12px}
+.quickPick,.topPick,.market,.marketCard,.altBtn,.riskPick,.stat,.detail,.formbox{
+  background:#fff;border-color:#dce4e6;border-radius:8px;color:#21343a;box-shadow:none
+}
+.quickPick small,.topPick .rank,.ml,.row,.reasons{color:#75858a}
+.quickPick b,.topPick b,.mp,.marketProb,.row b{color:#2f6f77}
+.quickPick.sel,.topPick.sel,.market.sel,.marketCard.sel,.riskPick.sel{
+  background:#edf5f6;border-color:#75a2a8;box-shadow:none
+}
+.detail summary{color:#263b41;padding:11px}
+.detail[open] summary{border-bottom-color:#e2e8ea}
+.detailHint,.fairNote{color:#7c8a8f}
+.marketSearch{background:#fff;color:#22363b;border-color:#d7e0e2;border-radius:7px}
+.marketCat{background:#fff;border-color:#d9e1e4;color:#66767b;border-radius:6px}
+.marketCat.on{background:#e7f1f2;border-color:#6c9aa0;color:#285e65}
+.marketInfo span,.pickMeta span{border-color:#dce3e5;color:#738187;background:#fafbfb}
+.marketInfo .realOdds{color:#2f6f77;border-color:#b9d3d6;background:#f0f7f8}
+.marketInfo .fairOdds{color:#8a6c24;border-color:#dfd1a6;background:#fbf7eb}
+.formbox{padding:9px}
+.fr{border-radius:6px}.fr.g{background:#eaf5ed;color:#40734d;border-color:#c2dcc8}.fr.b{background:#f8f3e7;color:#8a6f2d;border-color:#dfd1ab}.fr.m{background:#f8eaea;color:#a3545a;border-color:#e4c0c3}
+
+.drawer{
+  background:#fff;border-left:1px solid #d8e1e3;box-shadow:-12px 0 36px rgba(31,51,57,.12);
+  padding:14px;color:#1d3036
+}
+.scrim{background:rgba(27,43,48,.34)}
+.dhead h2{color:#1e3036}.list{padding:9px 0}
+.pick{background:#fff;border:0;border-bottom:1px solid #e2e8ea;border-radius:0;padding:12px 2px;margin:0}
+.pick strong{color:#22363b}.pick b{color:#2f6f77}
+.muted{color:#7b898e}
+.couponHealth{background:#f4f8f8;border:0;border-radius:8px;padding:10px}
+.healthCell span{color:#75848a}.healthCell b{color:#21363c}
+.warnList{gap:3px}.warnItem{
+  background:transparent;border:0;border-left:3px solid #d7b55f;border-radius:0;
+  color:#7a652d;padding:5px 8px;font-size:9px
+}
+.systemBox{background:#fff;border:1px solid #dce4e6;border-radius:8px}
+.systemItem{background:#f7f9fa;border:0;border-radius:7px}
+.bankoBtn{background:#fff9e9;border-color:#dccd9d;color:#836921;border-radius:6px}
+.bankoBtn.on{background:#f4e8bd;border-color:#c9b66e}
+.saveTrack,.applySmart{
+  background:#178a15;border:0;color:#fff;border-radius:7px;padding:11px
+}
+.danger{background:#fff;border:1px solid #e4c7c9;color:#b14f57;border-radius:7px}
+
+.smartTabs{background:#eef3f4;border:0;border-radius:8px;padding:2px}
+.smartTab{color:#687a80;border-radius:6px}.smartTab.on{background:#fff;color:#2f6f77;box-shadow:0 1px 3px rgba(41,65,72,.08)}
+.smartExtras{background:#fff;border-color:#dbe3e5;border-radius:8px}
+.customField>span,.smartExtrasTop span,.smartRecipe span{color:#7a898e}
+.stepper button{background:#eaf2eb;border:1px solid #c9d9cc;color:#3e6f47;border-radius:7px}
+.stepper input{background:#fff;color:#20343a;border-color:#dbe3e5;border-radius:7px}
+.refreshSmart{background:#edf5ef;border-color:#c8dacb;color:#3c6b45;border-radius:7px}
+.mixPill{background:#f5f7f8;border-color:#dfe5e7;color:#6f7e83}
+.smartPick{background:#fff;border:0;border-bottom:1px solid #e2e8ea;border-radius:0;padding:12px 2px}
+.smartPickTop b{color:#2f6f77}.smartWhy{color:#7b898e;border-top:0;padding-top:4px;margin-top:4px}
+.smartSource{border-radius:5px}.smartSource.real{color:#356b40;border-color:#c6d9ca;background:#f0f7f1}.smartSource.fair{color:#866a27;border-color:#ded0a6;background:#fbf7eb}.smartNotice{display:flex;gap:7px;align-items:flex-start;margin-top:7px;padding:7px 0 0;border-top:1px solid #e2e8ea}.smartNotice b{font-size:9px;color:#52666c;white-space:nowrap}.smartNotice span{font-size:9px;line-height:1.4;color:#77868b}.systemBox summary{list-style:none}.systemBox summary::-webkit-details-marker{display:none}.systemBox summary:after{content:"+";color:#718187;margin-left:auto}.systemBox[open] summary:after{content:"−"}.systemBox[open] .systemGrid{margin-top:8px}
+.trackStat,.perfRow,.trackCard{background:#fff;border-color:#dce4e6;border-radius:8px}
+.trackStat span,.perfRow small,.trackPick small{color:#7b898e}.perfRate{color:#2f6f77}
+.trackPick{border-top-color:#e5eaec}.trackTab{background:#fff;border-color:#dce4e6;color:#6b7a80}.trackTab.on{background:#e8f1f2;color:#2f6f77}
+.refreshTrack{background:#edf5ef;border-color:#c8dacb;color:#3c6b45}.deleteTrack{background:#fff;border-color:#e4c7c9;color:#b14f57}
+.trackEmpty{border-color:#dce4e6;color:#7b898e}
+.tag.good{background:#edf6ef;border-color:#c8ddcd;color:#477252}.tag.caution{background:#fbf6e8;border-color:#e4d7ac;color:#8a6e28}.tag.skip{background:#f9ebec;border-color:#e5c4c7;color:#a85259}
+.riskGroup{background:#fff;border-color:#dce4e6;border-radius:8px}
+.riskPick{background:#fff;border-color:#dce4e6}.riskBadge{color:#8a6d25}
+
+footer{color:#7c8a8f;border-top-color:#dce4e6}
+@media(max-width:650px){
+  .top{padding:9px 10px}
+  main{padding:12px 10px 68px}
+  .hero{padding:10px 2px 12px}.hero h1{font-size:28px}
+  .controls,.insights{border-radius:8px}
+  dialog{background:#fff;max-height:91dvh;border-radius:14px 14px 0 0}
+  .dh{background:#fff}
+  .drawer{width:100vw;padding:12px}
+  .summaryGrid2{grid-template-columns:repeat(2,1fr)}
+  .couponHealth{margin-top:7px}
+  .smartExtras{padding:10px}
+  .smartCouponList{gap:0}
+  .marketCards{grid-template-columns:1fr}
+}
+/* v42 sade koyu tema */
+:root{
+  --bg:#0d1216;--panel:#151b20;--panel2:#1a2127;--border:#273139;
+  --text:#e7ecee;--muted:#7f8c92;--accent:#5aa3aa;--accent2:#7bbbc0;
+  --danger:#df777d;--warn:#c8a75e;--shadow:none
+}
+html{background:var(--bg);color-scheme:dark}
+body{background:#0d1216;color:var(--text)}
+.top{background:#173f45;color:#fff;border-bottom:1px solid #245159;backdrop-filter:none}
+.logo{background:#eef5f5;color:#245e65;border:0}.brand b{color:#fff}.tiny{color:#a9c9cd}
+.cbtn,.trackBtn{background:#214b51;border-color:#37666c;color:#eaf3f4}.cbtn span{background:#e9f2f3;color:#245e65}
+main{padding-top:13px}.hero{padding:10px 2px 12px}.hero h1{color:#f1f4f5}.hero h1 span{color:#8d9ba0}.hero p{color:#78868c}
+.card{background:#151b20;border-color:#263038;box-shadow:none}
+.controls{background:#151b20}
+.dateBtn,.calendarBtn,.search input,.search select{background:#11171b;border-color:#29343c;color:#dfe5e7}
+.dateBtn b{color:#aeb8bc}.dateBtn.on{background:#21454a;border-color:#4a7a80;color:#dff0f1}.dateBtn.on b{color:#e7f5f6}
+.search input:focus,.search select:focus{border-color:#4c858c;box-shadow:none}
+.lh{background:#182126;border-bottom-color:#28333a}.country{color:#6f9095}.lname{color:#dce3e5}.count{color:#718087}
+.match{background:#151b20;border-bottom-color:#232c32}.match:hover{background:#192126}.time{color:#8fa0a5}.team{color:#e5eaeb}.team:first-child:before{background:#5aa3aa}
+.miniTag{background:#1b2328;border-color:#2b363d;color:#849198}.miniTag.value{background:#192a23;border-color:#31513f;color:#89b99a}.miniTag.coupon{background:#292419;border-color:#4c4227;color:#cdb875}
+.go{background:#2e727a;color:#fff}.go:hover{background:#347f88}
+.insights{background:#151b20}.insHead h3{color:#e4e9eb}.smartBtn{background:#258337;color:#fff}
+.summaryGrid2{gap:6px}.sumBox{background:#11171b;border:0}.sumBox b{color:#e7ecee}.sumBox span{color:#748289}
+.modelHealthStrip{background:#11171b;border:0}.modelHealthStrip b{color:#82bbc0}.modelHealthStrip span{color:#77858b}
+.opp{background:#12181c;border-color:#28333a;color:#e8edef}.opp:hover{background:#192126}.oppPick{color:#e4eaeb}.oppMatch,.oppMeta{color:#78868c}.oppMeta b{color:#79b5bb}
+dialog{background:#12181d;color:#e6ebed;border-color:#2a343b;box-shadow:0 22px 70px rgba(0,0,0,.48)}
+dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:none}.dh{background:#12181d;border-bottom-color:#273138}.dh h2{color:#eef2f3}.x{background:#1b2329;border-color:#2c3840;color:#98a5aa}
+.analysisSummary{background:#172226;border:0}.summaryLabel,.summaryProb span,.summaryMetric span{color:#78898e}.summaryPick{color:#eef3f4}.summaryProb b,.summaryMetric b{color:#8bc0c5}.summaryMetric{border-top-color:#2a353b}.confTrack{background:#263137}.confFill{background:#5aa3aa}
+.quickPick,.topPick,.market,.marketCard,.altBtn,.riskPick,.stat,.detail,.formbox{background:#151c21;border-color:#29343b;color:#e4eaec;box-shadow:none}
+.quickPick b,.topPick b,.mp,.marketProb,.row b{color:#86bdc2}.quickPick small,.topPick .rank,.ml,.row,.reasons{color:#7f8d92}
+.quickPick.sel,.topPick.sel,.market.sel,.marketCard.sel,.riskPick.sel{background:#1b3034;border-color:#4e858b}
+.detail summary{color:#dfe6e8}.detail[open] summary{border-bottom-color:#29343b}.detailHint,.fairNote{color:#738187}
+.marketSearch{background:#11171b;color:#e4eaeb;border-color:#29343b}
+.marketCat{background:#161e23;border-color:#29343b;color:#819096}.marketCat.on{background:#214348;border-color:#47777d;color:#dbecee}
+.marketInfo span,.pickMeta span{background:transparent;border:0;color:#7f8d92;padding:0}.marketInfo{gap:8px}.marketInfo .realOdds{color:#8cc4ca;border:0;background:transparent}.marketInfo .fairOdds{color:#b9a36b;border:0;background:transparent}
+.fr.g{background:#1b3023;color:#8fc59b;border-color:#33543d}.fr.b{background:#2b281c;color:#c7b474;border-color:#4f472c}.fr.m{background:#321f23;color:#d98f95;border-color:#58343a}
+.drawer{background:#12181d;color:#e6ebed;border-left-color:#29343b;box-shadow:-16px 0 50px rgba(0,0,0,.38)}
+.scrim{background:rgba(0,0,0,.64)}.dhead h2{color:#eef2f3}.pick{background:transparent;border-bottom-color:#263138}.pick strong{color:#e5ebed}.pick b{color:#8cc3c8}.muted{color:#748188}
+.couponHealth{background:#171f24;border:0}.healthCell span{color:#75848a}.healthCell b{color:#e6ecee}
+.warnItem,.smartNotice{background:transparent;border:0;border-left:2px solid #927b42;color:#a99665}.smartNotice b{color:#bba56e}.smartNotice span{color:#8e8572}
+.systemBox{background:#151c21;border-color:#29343b}.systemItem{background:#11171b;border:0}
+.bankoBtn{background:#282319;border-color:#4d4328;color:#c8b46d}.bankoBtn.on{background:#3a311b;border-color:#716035}
+.saveTrack,.applySmart{background:#258337;color:#fff}.danger{background:transparent;border-color:#56353a;color:#d68187}
+.smartTabs{background:#11171b;border:0}.smartTab{color:#7f8c92}.smartTab.on{background:#21454a;color:#e0eff0;box-shadow:none}
+.smartExtras{background:#151c21;border-color:#29343b}.stepper button{background:#1b2a20;border-color:#36513e;color:#91c49b}.stepper input{background:#11171b;color:#e7ecee;border-color:#29343b}.refreshSmart{background:#1a2920;border-color:#38513f;color:#90be99}
+.mixPill{background:#182025;border-color:#29343b;color:#7d8b91}.smartPick{background:transparent;border-bottom-color:#263138}.smartPickTop b{color:#8cc4ca}.smartWhy{display:none}.smartSource{border:0;background:transparent!important;padding:0}.smartSource.real{color:#84b98e}.smartSource.fair{color:#b7a46c}
+.trackStat,.perfRow,.trackCard{background:#151c21;border-color:#29343b}.perfRate{color:#86bdc2}.trackPick{border-top-color:#273138}.trackTab{background:#151c21;border-color:#29343b;color:#7f8d92}.trackTab.on{background:#21454a;color:#dfeff0}
+.riskGroup,.riskPick{background:#151c21;border-color:#29343b}.riskBadge{color:#bca66b}.tag.good{background:#1a2c21;border-color:#34513d;color:#91bd9a}.tag.caution{background:#2a2519;border-color:#4d432b;color:#c3ad70}.tag.skip{background:#301f22;border-color:#51343a;color:#d88e94}
+footer{color:#66747a;border-top-color:#242e34}
+@media(max-width:650px){
+  .hero p{display:none}.hero h1{font-size:27px}
+  dialog,.dh{background:#12181d}
+  .summaryGrid2{grid-template-columns:repeat(2,1fr)}
+  .marketInfo{font-size:9px}
+  .smartPick{padding:11px 0}.pick{padding:11px 0}
+}
+/* v42 bilgi yoğunluğu azaltma */
+.smartPick .pickMeta span:nth-of-type(n+3){display:none}
+.smartPick .smartSource{display:none}
+.pick .pickMeta span:nth-of-type(n+3){display:none}
+#smartDlg .couponHealth>.muted{display:none}
+#smartDlg .smartExtrasTop span{display:none}
+.marketInfo span{display:none}
+.marketInfo .realOdds,.marketInfo .marketRisk,.marketInfo .moveDown,.marketInfo .moveUp,.marketInfo .marketDivergence{display:inline}
+.marketInfo .marketRisk{color:#94a1a6}
+.marketInfo{margin-top:6px}
+.smartPick>div:nth-child(2){font-size:11px;color:#a9b5b9}
+.smartPick .pickMeta{margin-top:4px}
+.pickMeta{gap:8px}
+.smartPickTop strong{margin-bottom:3px}
+#couponHealth .healthCell b{font-size:17px}
+@media(max-width:650px){
+  .summaryGrid2{grid-template-columns:repeat(4,1fr)}
+  .sumBox{padding:7px 5px;text-align:center}
+  .sumBox b{font-size:15px}.sumBox span{font-size:8px}
+  .modelHealthStrip{padding:6px 8px}
+  .modelHealthStrip span{font-size:8px}
+  .smartToolbar{margin-top:7px}
+  .mixRow{margin:5px 0 7px}
+}
+.insActions{display:flex;gap:7px;align-items:center}.bestBtn{border:1px solid #35545a;background:#16262a;color:#9bc9cd;border-radius:7px;padding:9px 11px;font-size:9px;font-weight:850}.bestBtn:hover{background:#1b3035}.bestFilters{display:flex;gap:5px;overflow-x:auto;padding:10px 0 8px;scrollbar-width:none}.bestFilters::-webkit-scrollbar{display:none}.bestChip{white-space:nowrap;border:1px solid #29343b;background:#151c21;color:#7f8d92;border-radius:7px;padding:7px 9px;font-size:9px;font-weight:800}.bestChip.on{background:#21454a;border-color:#4a7a80;color:#e2f0f1}.bestControls{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}.bestControls select{height:36px;background:#11171b;border:1px solid #29343b;color:#dce4e6;border-radius:7px;padding:0 9px;font-size:10px}.bestSummary{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid #253037;margin-bottom:4px}.bestSummary b{font-size:15px;color:#e8edef}.bestSummary span{font-size:9px;color:#78868c}.perfStrip{display:flex;gap:6px;overflow-x:auto;padding:8px 0 9px;scrollbar-width:none}.perfStrip::-webkit-scrollbar{display:none}.perfPill{min-width:105px;background:#151c21;border:1px solid #29343b;border-radius:7px;padding:7px}.perfPill b{display:block;font-size:10px;color:#dfe6e8}.perfPill span{display:block;font-size:8px;color:#76858b;margin-top:2px}.perfPill.good b{color:#8fc49a}.perfPill.weak b{color:#d38b90}.bestList{display:grid;gap:0}.bestPick{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:12px 0;border-bottom:1px solid #263138}.bestPick:last-child{border-bottom:0}.bestPick small{display:block;color:#748188;font-size:9px;margin-bottom:3px}.bestPick strong{display:block;color:#e4eaec;font-size:11px;line-height:1.35}.bestPick .bestSel{color:#aebabe;margin-top:5px;font-size:10px}.bestPickMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;font-size:8px;color:#78868c}.bestOdds{display:flex;flex-direction:column;align-items:flex-end;gap:6px}.bestOdds b{color:#8cc4ca;font-size:16px}.bestAdd{border:1px solid #3a6043;background:#1b3021;color:#90c49a;border-radius:6px;padding:6px 8px;font-size:8px;font-weight:900}.bestAdd.added{opacity:.5}.bestEmpty{padding:20px 0;text-align:center;color:#77858b;font-size:10px}.lineupImpact{margin-top:7px;display:flex;gap:8px;align-items:center;padding:7px 9px;background:#172226;border-radius:7px}.lineupImpact b{font-size:9px;color:#8cc4ca;white-space:nowrap}.lineupImpact span{font-size:9px;color:#89979c;line-height:1.35}
+@media(max-width:650px){.insActions{gap:5px}.bestBtn,.smartBtn{padding:8px 8px;font-size:8px}.bestControls{grid-template-columns:1fr 1fr}.bestPick{padding:11px 0}}
+/* v46 buton sistemi */
+button{transition:transform .13s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease,opacity .16s ease;-webkit-tap-highlight-color:transparent}
+button:active{transform:translateY(1px) scale(.985)}
+.cbtn,.trackBtn,.bestBtn,.smartBtn,.go,.applySmart,.saveTrack,.refreshSmart,.bestAdd,.marketCat,.bestChip,.smartTab,.trackTab,.dateBtn,.calendarBtn,.bankoBtn{
+  border-radius:10px
+}
+.cbtn,.trackBtn{
+  min-height:38px;padding:9px 12px;border:1px solid #3c666c;
+  background:linear-gradient(180deg,#244f56 0%,#1d4349 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 4px 12px rgba(0,0,0,.12);
+  font-weight:820;letter-spacing:.015em
+}
+.cbtn:hover,.trackBtn:hover{background:linear-gradient(180deg,#2a5b62,#214950);border-color:#4c7a80}
+.cbtn span{border-radius:999px;padding:2px 7px;font-size:9px;font-weight:900}
+.bestBtn{
+  min-height:38px;padding:9px 13px;border:1px solid #3b6369;
+  background:linear-gradient(180deg,#1d3034,#17272b);color:#a9d4d8;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)
+}
+.bestBtn:hover{background:linear-gradient(180deg,#244148,#1a3035);border-color:#4d7a80;color:#d8f0f2}
+.smartBtn{
+  min-height:38px;padding:9px 14px;border:1px solid #3f8e50;
+  background:linear-gradient(180deg,#2d9843 0%,#237a35 100%);
+  color:white;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 5px 14px rgba(18,85,34,.22);
+  font-weight:900;letter-spacing:.02em
+}
+.smartBtn:hover{background:linear-gradient(180deg,#34a64c,#28883c);box-shadow:0 6px 18px rgba(18,85,34,.28)}
+.go{
+  min-height:34px;padding:8px 12px;border:1px solid #4c858b;
+  background:linear-gradient(180deg,#357f87,#2a6971);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);font-weight:850
+}
+.go:after{content:"  ›";font-size:14px;vertical-align:-1px}
+.applySmart,.saveTrack{
+  min-height:46px;border-radius:12px!important;border:1px solid #3d914d;
+  background:linear-gradient(180deg,#2d9a43,#237c35);color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 7px 18px rgba(15,74,28,.20);
+  font-weight:900;letter-spacing:.025em
+}
+.applySmart:hover,.saveTrack:hover{background:linear-gradient(180deg,#35a94d,#288b3c)}
+.refreshSmart,.bestAdd{
+  border:1px solid #385c42;background:linear-gradient(180deg,#1e3325,#192b20);
+  color:#99caa3;font-weight:850
+}
+.bestAdd{min-width:58px}
+.bestAdd:not(.added):hover,.refreshSmart:hover{background:#223b2a;border-color:#4d7657}
+.x{
+  width:34px;height:34px;border-radius:50%!important;display:grid;place-items:center;
+  background:#1a2328;border:1px solid #303c43;color:#91a0a5;font-size:18px;padding:0
+}
+.x:hover{background:#222d33;color:#dbe4e6;border-color:#405159}
+.smartTabs{padding:4px;border-radius:12px}
+.smartTab,.trackTab{
+  min-height:34px;padding:7px 11px;border:1px solid transparent!important;font-weight:820
+}
+.smartTab.on,.trackTab.on{
+  background:linear-gradient(180deg,#285159,#21464c)!important;
+  border-color:#47777e!important;color:#e5f3f4!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04)
+}
+.bestChip,.marketCat{
+  min-height:32px;padding:7px 10px;border-radius:999px!important
+}
+.bestChip.on,.marketCat.on{
+  background:#21454a!important;border-color:#4c7e84!important;color:#e0eff0!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025)
+}
+.dateBtn{min-height:44px}.dateBtn.on{box-shadow:inset 0 0 0 1px rgba(93,166,174,.16)}
+.stepper button{
+  width:36px;height:36px;border-radius:9px!important;background:#1b2d21!important;
+  border:1px solid #3b5943!important;color:#9bcca5!important;font-size:18px;font-weight:800
+}
+.danger{min-height:38px}
+.nesineBtn{width:100%;min-height:46px;margin-bottom:8px;border:1px solid #4c7f86;border-radius:12px;background:linear-gradient(180deg,#347f88,#28666e);color:#fff;font-size:11px;font-weight:900;letter-spacing:.025em;box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 6px 16px rgba(10,55,62,.22)}.nesineBtn:hover{background:linear-gradient(180deg,#3b8c95,#2d7179)}.nesineState{margin:0 0 9px;padding:9px 10px;border:1px solid #2c3940;border-radius:9px;background:#11181c;font-size:9px;line-height:1.45;color:#8c9a9f}.nesineState b{display:block;color:#dce6e8;font-size:10px;margin-bottom:3px}.nesineState.good{border-color:#355b40;background:#142119}.nesineState.good b{color:#93c89d}.nesineState.warn{border-color:#554a2d;background:#201d15}.nesineState.warn b{color:#cbb576}.nesineOpenFallback{margin-top:7px;border:1px solid #3a555a;border-radius:7px;background:#1a292d;color:#a9cdd1;padding:6px 9px;font-size:8px;font-weight:850}
+button:disabled{opacity:.45;cursor:default;transform:none!important}
+@media(max-width:650px){
+  .cbtn,.trackBtn{padding:8px 9px;min-height:36px;font-size:9px}
+  .bestBtn,.smartBtn{min-height:36px;padding:8px 9px}
+  .insActions{gap:6px}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand"><div class="logo">K</div><div><b>KuponLab</b><div class="tiny">MAÇ ANALİZİ</div></div></div><div class="topActions"><button id="openTracker" class="cbtn trackBtn">TAKİP <span id="tc">0</span></button><button id="openCoupon" class="cbtn">KUPONUM <span id="cc">0</span></button></div></header>
+<main>
+<section class="hero"><div class="ey">MAÇLAR</div><h1 id="heroTitle">Bugünün maçları.<br><span>İncele, seç, kuponunu oluştur.</span></h1><p>Form, oran ve model tahminlerini tek yerde gör.</p></section>
+<section class="controls card"><div class="dateBar"><div id="dateRail" class="dateRail"></div><label class="calendarBtn">TAKVİM<input id="datePicker" type="date"></label></div><div class="search"><input id="q" placeholder="Takım, lig veya ülke ara"><select id="country"><option value="">Tümü</option></select></div><div class="meta"><span id="meta">Fikstür hazırlanıyor…</span><button id="retry" class="retry" hidden>Yeniden dene</button></div></section>
+<section id="insights" class="insights card"><div class="insHead"><div><div class="ey" id="insEy">GÜNÜN ÖZETİ</div><h3 id="insTitle">Akıllı tarama hazırlanıyor</h3></div><div class="insActions"><button id="openBest" class="bestBtn">SEÇİM MERKEZİ</button><button id="openSmart" class="smartBtn">+ KUPON OLUŞTUR</button></div></div><div id="insBody" class="insLoading"><div class="spin"></div><span>Oranlı maçlar taranıyor…</span></div></section>
+<section id="state" class="state card"><div class="spin"></div><div><b>Fikstür yükleniyor</b><p>Global maçlar alınıyor.</p></div></section><section id="fixtures" class="fixtures"></section>
+</main>
+<aside id="drawer" class="drawer"><div class="dhead"><div><div class="ey">SEÇİMLERİM</div><h2>Kuponum <span id="cc2">0</span></h2></div><button id="closeCoupon" class="x">×</button></div><div id="couponHealth"></div><div id="picks" class="list"></div><div><button id="nesineTransfer" class="nesineBtn">NESİNE’DE AÇ ↗</button><div id="nesineStatus"></div><button id="saveTrack" class="saveTrack">KUPONU KAYDET & TAKİP ET</button><div class="muted">Bu bir analiz aracıdır; sonuç garantisi vermez.</div><button id="clear" class="danger">Kuponu temizle</button></div></aside><div id="scrim" class="scrim"></div>
+<dialog id="dlg"><div class="dlg"><div class="dh"><div><div id="al" class="ey"></div><h2 id="at">Maç analizi</h2><div id="adt" class="muted"></div></div><button id="closeDlg" class="x">×</button></div><div id="ab"></div></div></dialog>
+<dialog id="trackerDlg"><div class="dlg"><div class="dh"><div><div class="ey">KUPON TAKİP</div><h2>Geçmiş & performans</h2><div class="muted">Kaydettiğin kuponlar, sonuçlar ve son 30 gün özeti</div></div><button id="closeTracker" class="x">×</button></div><div id="trackerBody"></div></div></dialog>
+<dialog id="smartDlg"><div class="dlg"><div class="dh"><div><div class="ey">KUPON OLUŞTUR</div><h2>Kuponunu ayarla</h2><div class="muted">Maç sayısı, hedef oran ve risk</div></div><button id="closeSmart" class="x">×</button></div><div class="smartTabs"><button class="smartTab" data-profile="low">Düşük</button><button class="smartTab on" data-profile="balanced">Dengeli</button><button class="smartTab" data-profile="high">Yüksek</button><button class="smartTab" data-profile="extreme">Ekstrem</button></div><div class="smartExtras customBuild"><div class="smartExtrasTop"><b>Özel kupon</b><span>maç sayısı + hedef oran birlikte çalışır</span></div><div class="customGrid"><div class="customField"><span>Maç sayısı</span><div class="stepper"><button id="countMinus">−</button><input id="customCount" type="number" min="2" max="20" value="8"><button id="countPlus">+</button></div></div><div class="customField"><span>Hedef toplam oran</span><div class="stepper"><button id="targetMinus">−</button><input id="customTarget" type="number" min="1.5" max="5000" step="1" value="10"><button id="targetPlus">+</button></div></div></div><div id="customHint" class="customHint">8 maç · 10x hedef</div><button id="buildCustom" class="applySmart customApply">BU AYARLA KUPON OLUŞTUR</button></div><div id="smartBody"></div></div></dialog>
+<dialog id="bestDlg"><div class="dlg"><div class="dh"><div><div class="ey">GÜNLÜK TARAMA</div><h2>Seçim Merkezi</h2><div class="muted">En iyi seçimler ve gerçek oran hareketleri</div></div><button id="closeBest" class="x">×</button></div><div class="smartTabs"><button class="smartTab on" data-bestview="picks">En İyiler</button><button class="smartTab" data-bestview="moves">Oran Hareketi</button></div><div id="bestPicksPanel"><div class="bestFilters"><button class="bestChip on" data-bestg="all">Tümü</button><button class="bestChip" data-bestg="goals">Gol</button><button class="bestChip" data-bestg="corners">Korner</button><button class="bestChip" data-bestg="shots">Şut</button><button class="bestChip" data-bestg="saves">Kaleci</button><button class="bestChip" data-bestg="discipline">Kart/Faul</button></div><div class="bestControls"><select id="bestOdds"><option value="1.2,3">Oran 1.20–3.00</option><option value="1.2,2">Oran 1.20–2.00</option><option value="1.5,2.5">Oran 1.50–2.50</option></select><select id="bestRisk"><option value="65">Risk ≤65</option><option value="50">Risk ≤50</option><option value="75">Risk ≤75</option></select></div><div id="bestBody"></div></div><div id="movesPanel" hidden><div class="bestFilters"><button class="bestChip on" data-moveg="all">Tümü</button><button class="bestChip" data-moveg="goals">Gol</button><button class="bestChip" data-moveg="corners">Korner</button><button class="bestChip" data-moveg="shots">Şut</button><button class="bestChip" data-moveg="saves">Kaleci</button><button class="bestChip" data-moveg="discipline">Kart/Faul</button></div><div id="movesBody"></div></div></div></dialog>
+<footer>KuponLab v5.5 Cloudflare · Analizler son maçların gol ve form verilerini kullanır; olasılıklar garanti değildir. <b>18+</b></footer>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const st={o:0,events:[],filtered:[],match:null,analysis:null,insights:null,modelHealth:null,longInsights:null,longLoading:false,bestData:null,bestLoading:false,bestGroup:"all",bestView:"picks",movesData:null,movesLoading:false,movesGroup:"all",customData:null,customLoading:false,customCount:8,customTarget:10,smartProfile:"balanced",smartVariant:{},trackFilter:"all",marketCat:"result",marketQuery:"",marketIddaaOnly:true,coupon:JSON.parse(localStorage.getItem("kl-coupon")||"[]"),tracked:JSON.parse(localStorage.getItem("kl-tracked")||"[]")};
+let lockedScrollY=0,insightToken=0;
+function lockPage(){lockedScrollY=window.scrollY||0;document.body.classList.add("modal-lock");document.body.style.top="-"+lockedScrollY+"px"}
+function unlockPage(){if(!document.body.classList.contains("modal-lock"))return;document.body.classList.remove("modal-lock");document.body.style.top="";window.scrollTo(0,lockedScrollY)}
+const API="/api";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function localYmd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function date(o=0){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+Number(o||0));return localYmd(d)}
+function offsetFromDate(v){const t=new Date();t.setHours(12,0,0,0);const [y,m,d]=String(v).split("-").map(Number),x=new Date(y,m-1,d,12);return Math.round((x-t)/86400000)}
+function dayObj(o=st.o){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+Number(o||0));return d}
+function dayName(o=st.o){if(Number(o)===0)return "Bugün";if(Number(o)===1)return "Yarın";return new Intl.DateTimeFormat("tr-TR",{weekday:"short",day:"numeric",month:"short"}).format(dayObj(o))}
+function dayLong(o=st.o){if(Number(o)===0)return "Bugün";if(Number(o)===1)return "Yarın";return new Intl.DateTimeFormat("tr-TR",{day:"numeric",month:"long"}).format(dayObj(o))}
+function renderDateRail(){
+  const rail=$("#dateRail"),base=[0,1,2,3,4,5,6],arr=(st.o<0||st.o>6)?[st.o,...base]:base;
+  rail.innerHTML=arr.map(o=>{const d=dayObj(o),top=o===0?"Bugün":o===1?"Yarın":new Intl.DateTimeFormat("tr-TR",{weekday:"short"}).format(d),bot=new Intl.DateTimeFormat("tr-TR",{day:"numeric",month:"short"}).format(d);return '<button class="dateBtn '+(Number(o)===Number(st.o)?"on":"")+'" data-dateo="'+o+'"><b>'+esc(top)+'</b>'+esc(bot)+'</button>'}).join("");
+  $$("#dateRail [data-dateo]").forEach(b=>b.onclick=()=>selectDateOffset(Number(b.dataset.dateo)));
+  const p=$("#datePicker");p.min=date(0);p.value=date(st.o)
+}
+function selectDateOffset(o){if(!Number.isFinite(o)||o<0)return;st.o=Math.round(o);renderDateRail();load()}
+function tm(ts){return new Intl.DateTimeFormat("tr-TR",{hour:"2-digit",minute:"2-digit"}).format(new Date(ts*1000))}
+function country(e){return e.tournament?.category?.name||"Diğer"} function league(e){return e.tournament?.uniqueTournament?.name||e.tournament?.name||"Lig"}
+const API_CACHE_PREFIX="kl-api-v52:",apiInflight=new Map();
+function apiCacheGet(path,ttl){try{const x=JSON.parse(localStorage.getItem(API_CACHE_PREFIX+path)||"null");if(!x||!x.t||Date.now()-x.t>ttl)return null;return {...x.d,_clientCached:true}}catch{return null}}
+function apiCacheSet(path,d){try{localStorage.setItem(API_CACHE_PREFIX+path,JSON.stringify({t:Date.now(),d}))}catch{}}
+async function api(path,ms=15000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(API+path,{signal:c.signal});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"İstek başarısız");return d}finally{clearTimeout(t)}}
+async function apiCached(path,ttl=300000,ms=15000){const cached=apiCacheGet(path,ttl);if(cached)return cached;if(apiInflight.has(path))return apiInflight.get(path);const task=api(path,ms).then(d=>{apiCacheSet(path,d);return d}).catch(e=>{const stale=apiCacheGet(path,6*60*60*1000);if(stale)return {...stale,_clientStale:true};throw e}).finally(()=>apiInflight.delete(path));apiInflight.set(path,task);return task}
+async function apiPost(path,body,ms=20000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(API+path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body||{}),signal:c.signal});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"İstek başarısız");return d}finally{clearTimeout(t)}}
+function loading(){stateEl.hidden=false;stateEl.innerHTML='<div class="spin"></div><div><b>Fikstür yükleniyor</b><p>En fazla 15 saniye içinde sonuç veya hata göreceksin.</p></div>';retry.hidden=true}
+const stateEl=$("#state"),retry=$("#retry");
+
+async function load(){
+  loading();renderDateRail();$("#fixtures").innerHTML="";st.insights=null;st.modelHealth=null;st.longInsights=null;st.longLoading=false;st.bestData=null;st.bestLoading=false;st.movesData=null;st.movesLoading=false;st.customData=null;st.customLoading=false;st.smartVariant={};$("#insEy").textContent=st.o===0?"GÜNÜN ÖZETİ":st.o===1?"YARININ ÖZETİ":dayName(st.o).toLocaleUpperCase("tr")+" ÖZETİ";$("#heroTitle").innerHTML=esc(st.o===0?"Bugünün":st.o===1?"Yarının":dayLong(st.o))+' maçları.<br><span>İncele, seç, kuponunu oluştur.</span>';$("#insTitle").textContent="Akıllı tarama hazırlanıyor";$("#insBody").className="insLoading";$("#insBody").innerHTML='<div class="spin"></div><span>Oranlı maçlar taranıyor…</span>';
+  try{
+    const d=await apiCached("/fixtures?date="+date(st.o),180000,15000);st.events=d.events||[];fillCountries();filter();stateEl.hidden=true;$("#meta").textContent=st.events.length+" maç · "+(d._clientStale?"çevrimdışı önbellekten":d._clientCached?"telefon önbelleğinden":d.cached?"sunucu önbelleğinden":"canlı kaynaktan");loadInsights();loadModelHealth()
+  }catch(e){
+    stateEl.hidden=false;stateEl.innerHTML='<div><b style="color:var(--danger)">Fikstür alınamadı</b><p>'+esc(e.name==="AbortError"?"İstek zaman aşımına uğradı.":e.message)+'</p></div>';retry.hidden=false;$("#meta").textContent="Bağlantı hatası"
+  }
+}
+async function loadModelHealth(){try{st.modelHealth=await apiCached("/model-health",1800000,12000);if(st.insights)renderInsights()}catch{}}
+async function loadInsights(){
+  const token=++insightToken,target=date(st.o);
+  try{
+    const d=await apiCached("/insights?date="+target,600000,45000);if(token!==insightToken||target!==date(st.o))return;st.insights=d;renderInsights()
+  }catch(e){
+    if(token!==insightToken)return;$("#insTitle").textContent="Günlük tarama tamamlanamadı";$("#insBody").className="";$("#insBody").innerHTML='<div class="muted" style="padding-top:8px">'+esc(e.name==="AbortError"?"Tarama zaman aşımına uğradı.":e.message)+' <button id="retryInsights" class="retry">Tekrar dene</button></div>';$("#retryInsights").onclick=loadInsights
+  }
+}
+function fillCountries(){const el=$("#country"),cur=el.value,cs=[...new Set(st.events.map(country))].sort((a,b)=>a.localeCompare(b,"tr"));el.innerHTML='<option value="">Tümü</option>'+cs.map(x=>'<option>'+esc(x)+'</option>').join("");if(cs.includes(cur))el.value=cur}
+function filter(){const q=$("#q").value.trim().toLocaleLowerCase("tr"),c=$("#country").value;st.filtered=st.events.filter(e=>(!c||country(e)===c)&&(!q||[e.homeTeam.name,e.awayTeam.name,league(e),country(e)].join(" ").toLocaleLowerCase("tr").includes(q)));render()}
+function render(){const root=$("#fixtures");if(!st.filtered.length){root.innerHTML='<div class="card empty">Bu filtrelerde maç bulunamadı.</div>';return}const ops=new Map((st.insights?.opportunities||[]).map(x=>[String(x.matchId),x])),couponIds=new Set(Object.values(st.insights?.coupons||{}).flatMap(c=>c?.picks||[]).map(x=>String(x.matchId))),g=new Map();st.filtered.forEach(e=>{const k=country(e)+"|||"+league(e);if(!g.has(k))g.set(k,[]);g.get(k).push(e)});root.innerHTML=[...g].map(([k,a])=>{const [c,l]=k.split("|||");return '<section class="league card"><div class="lh"><div><div class="country">'+esc(c)+'</div><div class="lname">'+esc(l)+'</div></div><div class="count">'+a.length+' maç</div></div>'+a.sort((x,y)=>x.startTimestamp-y.startTimestamp).map(e=>{const o=ops.get(String(e.id)),tags=(o?'<span class="miniTag value">FIRSAT +'+Math.round(o.edge*100)+'p</span>':'')+(couponIds.has(String(e.id))?'<span class="miniTag coupon">KUPON ADAYI</span>':'');return '<div class="match"><div class="time">'+tm(e.startTimestamp)+'</div><div class="teams"><div class="team">'+esc(e.homeTeam.name)+'</div><div class="team">'+esc(e.awayTeam.name)+'</div>'+(tags?'<div class="matchTags">'+tags+'</div>':'')+'</div><button class="go" data-id="'+e.id+'">ANALİZ</button></div>'}).join("")+'</section>'}).join("");$$("[data-id]").forEach(b=>b.onclick=()=>analyze(+b.dataset.id))}
+function oddsMove(x){if(!x?.openDecimal)return 'Oran '+Number(x?.decimal||0).toFixed(2);const cur=Number(x.decimal),op=Number(x.openDecimal),arrow=cur<op?"↓":cur>op?"↑":"→",cls=cur<op?"moveDown":cur>op?"moveUp":"";return '<span class="'+cls+'">'+op.toFixed(2)+'→'+cur.toFixed(2)+' '+arrow+'</span>'}
+function modelHealthHtml(){
+  const h=st.modelHealth?.v5;if(!h)return '';
+  return '<div class="modelHealthStrip"><b>Model v5.2 Ensemble</b><span>'+Number(h.matches||0)+' test · '+(h.status==="collecting"?"veri toplanıyor":("holdout "+Number(h.validation?.n||0)))+'</span></div>'
+}
+function renderInsights(){
+  const d=st.insights,s=d?.summary||{},ops=d?.opportunities||[];$("#insTitle").textContent=dayName(st.o)+" · "+s.totalFixtures+" maç";
+  $("#insBody").className="";
+  $("#insBody").innerHTML='<div class="summaryGrid2"><div class="sumBox"><b>'+s.totalFixtures+'</b><span>Maç</span></div><div class="sumBox"><b>'+(s.iddaaMatches??0)+'</b><span>İddaa</span></div><div class="sumBox"><b>'+s.analyzed+'</b><span>Analiz</span></div><div class="sumBox"><b>'+s.suitable+'</b><span>Uygun</span></div></div>'+(ops.length?'<div class="oppTitle">Öne çıkanlar</div><div class="oppList">'+ops.slice(0,3).map(o=>'<button class="opp" data-opp="'+o.matchId+'"><div class="oppMatch">'+esc(o.match)+'</div><div class="oppPick">'+esc(o.pick)+' · '+Number(o.decimal).toFixed(2)+'</div><div class="oppMeta"><span>Model %'+o.probability+' · Risk '+o.risk+'/100</span></div></button>').join("")+'</div>':'<div class="muted" style="padding-top:10px">Şu anda filtreyi geçen net bir değer fırsatı yok.</div>')+modelHealthHtml();
+  $$("[data-opp]").forEach(b=>b.onclick=()=>analyze(+b.dataset.opp));render()
+}
+const bestGroupNames={result:"Sonuç",goals:"Gol",btts:"KG",corners:"Korner",shots:"Şut",saves:"Kaleci",discipline:"Kart/Faul",player:"Oyuncu",combo:"Kombine",standard:"Standart"};
+function renderBest(){
+  const root=$("#bestBody");$$("[data-bestg]").forEach(b=>b.classList.toggle("on",b.dataset.bestg===st.bestGroup));
+  if(st.bestLoading){root.innerHTML='<div class="loading"><div class="spin"></div><b>Günün seçimleri taranıyor…</b></div>';return}
+  const d=st.bestData;if(!d){root.innerHTML='<div class="bestEmpty">Tarama bekleniyor.</div>';return}
+  const perf=(d.performance||[]).filter(x=>x.n>0),perfHtml=perf.length?'<div class="perfStrip">'+perf.map(x=>'<div class="perfPill '+(x.status==="Tutarlı"?"good":x.status==="Zayıf uyum"?"weak":"")+'"><b>'+esc(bestGroupNames[x.group]||x.group)+'</b><span>'+Number(x.eventN||0)+' maç · '+esc(x.status)+'</span></div>').join("")+'</div>':'';
+  const picks=d.picks||[],added=new Set(st.coupon.map(x=>String(x.matchId)+"|"+x.marketKey));
+  root.innerHTML='<div class="bestSummary"><div><b>'+picks.length+'</b><span>uygun seçim</span></div><div><b>'+Number(d.summary?.scannedMatches||0)+'</b><span>detaylı analiz</span></div><div><b>'+Number(d.summary?.iddaaMatches||0)+'</b><span>İddaa maçı</span></div></div>'+perfHtml+(picks.length?'<div class="bestList">'+picks.map((p,i)=>{const on=added.has(String(p.matchId)+"|"+p.marketKey);return '<div class="bestPick"><div><small>'+esc(p.league)+'</small><strong>'+esc(p.match)+'</strong><div class="bestSel">'+esc(p.pick)+'</div><div class="bestPickMeta"><span>Model %'+p.probability+'</span><span>Risk '+p.risk+'</span><span>'+esc(bestGroupNames[p.group]||p.group)+'</span>'+(p.performanceN?'<span>'+esc(p.performanceStatus)+' · '+p.performanceN+' test</span>':'')+'</div></div><div class="bestOdds"><b>'+Number(p.decimal).toFixed(2)+'</b><button class="bestAdd '+(on?'added':'')+'" data-bestadd="'+i+'" '+(on?'disabled':'')+'>'+(on?'EKLENDİ':'+ EKLE')+'</button></div></div>'}).join("")+'</div>':'<div class="bestEmpty">Bu filtrelerde uygun seçim bulunamadı.</div>');
+  $$("[data-bestadd]").forEach(b=>b.onclick=()=>{const p=picks[+b.dataset.bestadd];if(!p)return;const exists=st.coupon.some(x=>String(x.matchId)===String(p.matchId)&&x.marketKey===p.marketKey);if(!exists){st.coupon.push({...p,source:"best",couponProfile:"best",banko:false});save()}renderBest()})
+}
+async function loadBest(){
+  st.bestLoading=true;renderBest();const [mn,mx]=String($("#bestOdds").value||"1.2,3").split(",").map(Number),risk=Number($("#bestRisk").value||65);
+  try{st.bestData=await apiCached("/best-picks?date="+date(st.o)+"&group="+encodeURIComponent(st.bestGroup)+"&minOdds="+mn+"&maxOdds="+mx+"&maxRisk="+risk,300000,85000)}
+  catch(e){st.bestData={picks:[],performance:[],summary:{},error:e.name==="AbortError"?"Tarama zaman aşımına uğradı.":e.message}}
+  finally{st.bestLoading=false;if(st.bestData?.error)$("#bestBody").innerHTML='<div class="bestEmpty">'+esc(st.bestData.error)+'</div>';else renderBest()}
+}
+function renderMoves(){
+  const root=$("#movesBody");$$("[data-moveg]").forEach(b=>b.classList.toggle("on",b.dataset.moveg===st.movesGroup));
+  if(st.movesLoading){root.innerHTML='<div class="loading"><div class="spin"></div><b>Oran hareketleri hazırlanıyor…</b></div>';return}
+  const d=st.movesData;if(!d){root.innerHTML='<div class="bestEmpty">Hareket verisi bekleniyor.</div>';return}
+  const rows=d.rows||[];
+  root.innerHTML=rows.length?'<div class="bestList">'+rows.map(x=>{const down=Number(x.changePct)<0,up=Number(x.changePct)>0,dir=down?"↓":up?"↑":"→",div=x.divergencePp==null?"":'<span>Fark '+(Number(x.divergencePp)>=0?"+":"")+Number(x.divergencePp).toFixed(1)+'p</span>';return '<div class="bestPick"><div><small>'+esc(bestGroupNames[x.group]||x.group)+' · '+(x.marketName?esc(x.marketName):"İddaa")+'</small><strong>'+esc(x.match||"Maç")+'</strong><div class="bestSel">'+esc(x.pick||x.marketKey)+'</div><div class="bestPickMeta"><span>İlk '+Number(x.firstOdd).toFixed(2)+' → '+Number(x.currentOdd).toFixed(2)+' '+dir+' %'+Math.abs(Number(x.changePct||0)).toFixed(1)+'</span>'+(x.modelProbability!=null?'<span>Model %'+Number(x.modelProbability).toFixed(0)+'</span>':'')+div+'</div></div><div class="bestOdds"><b>'+Number(x.currentOdd).toFixed(2)+'</b><span class="'+(down?"moveDown":up?"moveUp":"muted")+'">'+(down?"Düştü":up?"Yükseldi":"Sabit")+'</span></div></div>'}).join("")+'</div>':'<div class="bestEmpty">Bu tarihte henüz anlamlı oran hareketi kaydı yok.</div>'
+}
+async function loadMoves(){
+  st.movesLoading=true;renderMoves();
+  try{st.movesData=await apiCached("/odds-moves?date="+date(st.o)+"&group="+encodeURIComponent(st.movesGroup)+"&limit=40",60000,25000)}
+  catch(e){st.movesData={rows:[],error:e.name==="AbortError"?"Oran hareketi sorgusu zaman aşımına uğradı.":e.message}}
+  finally{st.movesLoading=false;if(st.movesData?.error)$("#movesBody").innerHTML='<div class="bestEmpty">'+esc(st.movesData.error)+'</div>';else renderMoves()}
+}
+function setBestView(v){
+  st.bestView=v;$$("[data-bestview]").forEach(b=>b.classList.toggle("on",b.dataset.bestview===v));$("#bestPicksPanel").hidden=v!=="picks";$("#movesPanel").hidden=v!=="moves";
+  if(v==="picks"){if(!st.bestData)loadBest();else renderBest()}else{if(!st.movesData)loadMoves();else renderMoves()}
+}
+function openBest(){lockPage();$("#bestDlg").showModal();setBestView(st.bestView||"picks")}
+
+async function analyze(id){
+  const m=st.events.find(e=>+e.id===id);if(!m)return;st.match=m;st.marketCat="result";st.marketQuery="";$("#al").textContent=country(m)+" · "+league(m);$("#at").textContent=m.homeTeam.name+" — "+m.awayTeam.name;$("#adt").textContent=tm(m.startTimestamp);$("#ab").innerHTML='<div class="loading"><div class="spin"></div><b>Model v5.2 Ensemble analiz ediyor…</b></div>';lockPage();$("#dlg").showModal();
+  try{const d=await apiCached("/analyze?home="+m.homeTeam.id+"&away="+m.awayTeam.id+"&ts="+m.startTimestamp+"&event="+m.id,300000,28000);st.analysis=d.analysis;renderAnalysis()}
+  catch(e){$("#ab").innerHTML='<div class="state"><div><b style="color:var(--danger)">Analiz alınamadı</b><p>'+esc(e.message)+'</p></div></div>'}
+}
+function box(name,s,a,p,l){const line=l?.stability!=null?('%'+l.stability):(l?.historyLineups?'ölçülüyor':'veri yok');return '<div class="stat"><h4>'+esc(name)+'</h4><div class="row"><span>Güç ratingi</span><b>'+Number(p?.rating??50).toFixed(1)+'</b></div><div class="row"><span>Kronolojik Elo</span><b>'+(p?.elo?Number(p.elo).toFixed(0)+' · '+Number(p.eloMatches||0)+' maç':'—')+'</b></div><div class="row"><span>Global güç</span><b>'+(p?.global?Number(p.global).toFixed(0)+' · '+Number(p.globalCoverage||0)+' ağ':'—')+'</b></div><div class="row"><span>Atak Kalitesi*</span><b>'+(a?.sample?Number(a.attack).toFixed(1):'—')+'</b></div><div class="row"><span>Şut / isabetli</span><b>'+(a?.sample?(a.shots+' / '+a.sot):'—')+'</b></div><div class="row"><span>Topa sahip olma</span><b>'+(a?.sample?('%'+a.possession):'—')+'</b></div><div class="row"><span>Kadro sürekliliği</span><b>'+line+'</b></div><div class="row"><span>Gol / maç</span><b>'+s.gf+'</b></div><div class="row"><span>Yediği gol / maç</span><b>'+s.ga+'</b></div><div class="row"><span>Form puanı</span><b>'+s.ppg+'</b></div><div class="row"><span>2.5 Üst</span><b>%'+s.over25+'</b></div><div class="row"><span>KG Var</span><b>%'+s.btts+'</b></div><div class="muted" style="margin-top:7px">* xG değildir; şut, isabetli şut, korner ve possession birleşimidir.</div></div>'}
+function formRow(name,arr){return '<div class="formteam"><span>'+esc(name)+'</span><div class="formdots">'+(arr||[]).map(x=>'<div class="fr '+(x.result==="G"?"g":x.result==="B"?"b":"m")+'">'+x.result+'<small class="scoremini">'+esc(x.score)+'</small></div>').join("")+'</div></div>'}
+function marketDetail(c){
+  if(!c?.available)return '';const labels={"1":"1","X":"X","2":"2","O25":"2.5 ÜST","U25":"2.5 ALT"},hint=c.bestEdge?((c.bestEdge.edge>=0?"+":"")+Math.round(c.bestEdge.edge*100)+" puan"):"karşılaştır";
+  return '<details class="detail"><summary>Piyasa karşılaştırması <span class="detailHint">'+hint+'</span></summary><div class="detailBody"><div class="stat"><div class="muted" style="margin-bottom:6px">'+esc(c.provider)+' · bookmaker marjı çıkarılmıştır</div>'+c.rows.map(x=>'<div class="row"><span>'+esc(labels[x.key]||x.key)+' · Model %'+Math.round(x.model*100)+'</span><b>'+oddsMove(x)+' · '+(x.edge>=0?"+":"")+Math.round(x.edge*100)+'p</b></div>').join("")+'</div></div></details>'
+}
+function altHtml(a){
+  const z=a?.product?.alternatives;if(!z)return '';const items=[];if(z.safer)items.push({t:"Daha güvenli",x:z.safer});if(z.higherReturn&&z.higherReturn.key!==z.safer?.key)items.push({t:"Daha yüksek oran",x:z.higherReturn});if(!items.length)return '';
+  return '<div class="miniTitle">Tek dokunuş alternatif</div><div class="altGrid">'+items.map(o=>'<button class="altBtn" data-m="'+o.x.key+'"><small>'+o.t+'</small><b>'+esc(o.x.label)+'</b><span>'+(o.x.decimal?Number(o.x.decimal).toFixed(2):'%'+o.x.probability)+'</span></button>').join("")+'</div>'
+}
+function riskCard(x,sel){return '<button class="riskPick '+(sel.has(x.key)?"sel":"")+'" data-m="'+x.key+'"><strong>'+esc(x.label)+'</strong><div class="riskNums"><div class="riskNum"><span>Olasılık</span><b>%'+x.probability+'</b></div><div class="riskNum"><span>Adil oran</span><b>~'+Number(x.fairOdds).toFixed(2)+'</b></div></div><div class="riskBadge">Risk '+x.risk+'/100</div></button>'}
+function riskHtml(a,sel){
+  const ex=a?.exotic||{},goals=(ex.goals||[]).filter(x=>["TG01","TG23","TG45","TG6P"].includes(x.key)),special=(ex.htft||[]).filter(x=>["HTFT_1_2","HTFT_2_1","HTFT_X_1","HTFT_X_2","HTFT_1_X","HTFT_2_X"].includes(x.key)),scores=(ex.scorelines||[]).slice(0,6);
+  if(!goals.length&&!special.length&&!scores.length)return '';
+  return '<details class="detail"><summary>Yüksek risk tahminleri <span class="detailHint">skor · İY/MS · 6+ gol</span></summary><div class="detailBody"><div class="riskSection">'+
+    '<div class="riskGroup"><div class="riskGroupHead"><b>Toplam gol sayısı</b><span>0-1 · 2-3 · 4-5 · 6+</span></div><div class="riskGrid">'+goals.map(x=>riskCard(x,sel)).join("")+'</div></div>'+
+    '<div class="riskGroup"><div class="riskGroupHead"><b>İlk yarı / maç sonucu</b><span>ters dönüşler ve sürprizler</span></div><div class="riskGrid">'+special.map(x=>riskCard(x,sel)).join("")+'</div></div>'+
+    '<div class="riskGroup"><div class="riskGroupHead"><b>Model skor tahmini</b><span>en olası 6 skor</span></div><div class="riskGrid">'+scores.map(x=>riskCard(x,sel)).join("")+'</div></div>'+
+    '</div><div class="fairNote">Adil oran, model olasılığının matematiksel karşılığıdır; bookmaker oranı değildir.</div></div></details>'
+}
+const IDDAA_FRONT_FAMILIES=new Set(["standard","result","goals","btts","firstHalf","teamGoals","corners","shots","sot","cards","fouls","offsides","saves","playerShots","playerSot","playerGoals","playerAssists","playerCards","playerFouls","playerOffsides","playerSaves"]);
+const IDDAA_FRONT_COMBOS=new Set(["C_1_BTTS","C_2_BTTS","C_1_NBTTS","C_2_NBTTS","C_1_O15","C_2_O15","C_1_O25","C_2_O25","C_1_U35","C_2_U35"]);
+function iddaaMarketType(x){const f=String(x?.family||"");return IDDAA_FRONT_FAMILIES.has(f)||(f==="combo"&&IDDAA_FRONT_COMBOS.has(String(x.key||"")))}
+function catalogCats(a){return (a?.catalog?.categories||[]).filter(c=>(c.items||[]).length)}
+function quickMarketPicks(a){
+  const cats=catalogCats(a),get=id=>(cats.find(c=>c.id===id)?.items||[]),choose=(arr,minSample=0)=>[...arr].filter(x=>(a?.iddaa?.matched?x.iddaa?.available:iddaaMarketType(x))&&Number(x.sample||0)>=minSample&&Number(x.fairOdds||0)>=1.18&&Number(x.fairOdds||99)<=4.2).sort((x,y)=>y.probability-x.probability)[0];
+  const standard=choose(get("result").filter(x=>x.family==="standard")),combo=choose(get("combo")),prop=choose([...get("corners"),...get("shots"),...get("discipline"),...get("saves")],3),player=choose(get("players").filter(x=>x.lineupStatus==="İlk 11 onaylı"),2)||choose(get("players"),3);
+  return [{t:"Standart",x:standard},{t:"Kombine",x:combo},{t:"Prop",x:prop},{t:"Oyuncu",x:player}].filter(z=>z.x)
+}
+function marketExplorerShell(a){
+  const n=catalogCats(a).reduce((s,c)=>s+(c.items||[]).length,0);return '<details class="detail"><summary>Tüm Marketler <span class="detailHint">'+n+' seçenek</span></summary><div class="detailBody"><div id="marketExplorer" class="marketExplorer"></div></div></details>'
+}
+function movementBadge(id){
+  const m=id?.movement;if(!m||!Number.isFinite(Number(m.firstOdd))||!Number.isFinite(Number(m.currentOdd))||Math.abs(Number(m.changePct||0))<.1)return "";
+  const pct=Number(m.changePct),arrow=pct<0?"↓":"↑",cls=pct<0?"moveDown":"moveUp";
+  return '<span class="'+cls+'">İlk '+Number(m.firstOdd).toFixed(2)+'→'+Number(m.currentOdd).toFixed(2)+' '+arrow+' %'+Math.abs(pct).toFixed(1)+'</span>'
+}
+function divergenceBadge(x){
+  const fair=Number(x?.iddaa?.fairProbability),model=Number(x?.probabilityRaw??Number(x?.probability||0)/100);if(!Number.isFinite(fair)||fair<=0||!Number.isFinite(model))return "";
+  const d=(model-fair)*100;if(Math.abs(d)<.5)return "";return '<span class="marketDivergence">Fark '+(d>=0?"+":"")+d.toFixed(1)+'p</span>'
+}
+function renderMarketExplorer(){
+  const a=st.analysis,root=$("#marketExplorer");if(!a||!root)return;const cats=catalogCats(a);if(!cats.length){root.innerHTML='<div class="marketEmpty">Bu maç için ek market verisi yok.</div>';return}
+  if(!cats.some(c=>c.id===st.marketCat))st.marketCat=cats[0].id;
+  const cat=cats.find(c=>c.id===st.marketCat)||cats[0],q=(st.marketQuery||"").trim().toLocaleLowerCase("tr"),pc=new Map((a.product?.pricedCandidates||[]).map(x=>[x.key,x])),sel=new Set(st.coupon.filter(x=>String(x.matchId)===String(st.match?.id)).map(x=>x.marketKey));
+  let items=[...(cat.items||[])];if(st.marketIddaaOnly)items=items.filter(x=>a?.iddaa?.matched?x.iddaa?.available:iddaaMarketType(x));if(q)items=items.filter(x=>[x.label,x.title,x.player,x.family,x.iddaa?.marketName,x.iddaa?.outcomeName].filter(Boolean).join(" ").toLocaleLowerCase("tr").includes(q));
+  root.innerHTML='<div class="marketTop"><input id="marketSearch" class="marketSearch" value="'+esc(st.marketQuery||"")+'" placeholder="Market veya oyuncu ara"><button id="iddaaMarketToggle" class="marketCat '+(st.marketIddaaOnly?"on":"")+'">'+(st.marketIddaaOnly?(a?.iddaa?.matched?"İDDAA'DA AÇIK ✓":"İDDAA HENÜZ AÇMADI"):"TÜM MARKETLER")+'</button><span class="marketCount">'+items.length+' / '+(cat.items||[]).length+'</span></div><div class="marketTabs">'+cats.map(c=>'<button class="marketCat '+(c.id===st.marketCat?"on":"")+'" data-cat="'+esc(c.id)+'">'+esc(c.label)+' · '+c.items.length+'</button>').join("")+'</div><div class="marketCards">'+(items.length?items.map(x=>{const priced=pc.get(x.key),official=iddaaMarketType(x),id=x.iddaa?.available?x.iddaa:null,odds=id?'<span class="realOdds">İddaa '+Number(id.odd).toFixed(2)+'</span>'+(id.mbs?'<span>MBS '+id.mbs+'</span>':'')+(x.fairOdds?'<span class="fairOdds">Model ~'+Number(x.fairOdds).toFixed(2)+'</span>':''):priced?.decimal?'<span class="realOdds">'+(priced.oddsType==="iddaa"?"İddaa ":"Piyasa ")+Number(priced.decimal).toFixed(2)+'</span>':x.fairOdds?'<span class="fairOdds">~'+Number(x.fairOdds).toFixed(2)+' adil</span>':'',lineup=x.lineupStatus?'<span class="'+(x.lineupStatus==="İlk 11 onaylı"?"lineupOk":"lineupProb")+'">'+esc(x.lineupStatus)+'</span>':'';return '<button class="marketCard '+(sel.has(x.key)?"sel":"")+'" data-marketkey="'+esc(x.key)+'"><div class="marketCardTop"><strong>'+esc(x.label)+'</strong><span class="marketProb">%'+x.probability+'</span></div><div class="marketInfo">'+odds+(id?'<span class="lineupOk">İddaa’da açık</span>':'<span>'+(official?'İddaa market türü':'Model marketi')+'</span>')+'<span class="marketRisk">Risk '+Math.round(Number(x.risk||50))+'</span>'+movementBadge(id)+divergenceBadge(x)+'</div></button>'}).join(""):'<div class="marketEmpty">'+(a?.iddaa?.matched?'Bu kategoride modelle eşleşen açık İddaa marketi yok.':'İddaa bu maçı henüz bültene açmadı; Tüm Marketler ile model tahminlerini görebilirsin.')+'</div>')+'</div><div class="fairNote">'+(a?.iddaa?.matched?'İddaa etiketi resmi bültendeki mevcut orandır. ':'Bu maç henüz resmi İddaa bülteninde eşleşmedi. ')+'~ Model adil oranıdır; gerçek İddaa oranı değildir.</div>';
+  $$("#marketExplorer [data-cat]").forEach(b=>b.onclick=()=>{st.marketCat=b.dataset.cat;st.marketQuery="";renderMarketExplorer()});const ib=$("#iddaaMarketToggle");if(ib)ib.onclick=()=>{st.marketIddaaOnly=!st.marketIddaaOnly;renderMarketExplorer()};
+  const inp=$("#marketSearch");if(inp)inp.oninput=e=>{st.marketQuery=e.target.value;renderMarketExplorer();const ni=$("#marketSearch");if(ni){ni.focus();ni.setSelectionRange(ni.value.length,ni.value.length)}};
+  $$("#marketExplorer [data-marketkey]").forEach(b=>b.onclick=()=>toggle(b.dataset.marketkey,true))
+}
+function iddaaStatusHtml(a){
+  if(a?.iddaa?.matched)return '<div class="modelHealthStrip"><b>İddaa açık ✓</b><span>MBS '+(a.iddaa.mbs||"—")+'</span></div>';
+  return '<div class="modelHealthStrip"><b>İddaa bekleniyor</b><span>Analiz kullanılabilir</span></div>'
+}
+function lineupImpactHtml(a){
+  const x=a?.lineupImpact;if(!x)return '';
+  if(x.state==="waiting")return '';
+  if(x.state==="partial")return '<div class="lineupImpact"><b>İlk 11 kısmi</b><span>Diğer takım bekleniyor</span></div>';
+  if(x.state!=="confirmed")return '';
+  if(!x.baselineStored)return '<div class="lineupImpact"><b>İlk 11 onaylandı ✓</b><span>Kadro öncesi karşılaştırma kaydı yok</span></div>';
+  const c=x.changes||{},parts=[["1",c.home],["X",c.draw],["2",c.away],["Üst",c.over25],["KG",c.btts]].filter(z=>Number.isFinite(Number(z[1]))&&Math.abs(Number(z[1]))>=.5).sort((u,v)=>Math.abs(v[1])-Math.abs(u[1])).slice(0,3);
+  return '<div class="lineupImpact"><b>İlk 11 sonrası</b><span>'+(parts.length?parts.map(z=>z[0]+' '+(z[1]>=0?'+':'')+Number(z[1]).toFixed(1)+'p').join(' · '):'Ana olasılıklarda belirgin değişim yok')+'</span></div>'
+}
+function renderAnalysis(){
+  const a=st.analysis,m=st.match,sel=new Set(st.coupon.filter(x=>String(x.matchId)===String(m.id)).map(x=>x.marketKey)),quick=quickMarketPicks(a),su=a.product?.suitability||{code:"caution",label:"Temkinli",reason:""};
+  $("#ab").innerHTML='<div class="analysisSummary"><div class="summaryTop"><div><div class="summaryLabel">'+(a.signal==="Zayıf"?"Net sinyal yok · en yüksek olasılık":esc(a.signal)+" sinyal")+'</div><div class="summaryPick">'+esc(a.bestPick.label)+'</div><div style="margin-top:7px"><span class="tag '+esc(su.code)+'">'+esc(su.label)+'</span></div></div><div class="summaryProb"><b>%'+a.bestPick.probability+'</b><span>olasılık</span></div></div><div class="summaryMeta"><div class="summaryMetric"><span>Güven · Veri '+a.dataQuality+'/100 · Stabilite '+Number(a.stability||0)+'/100</span><b>%'+a.confidence+'</b><div class="confTrack"><div class="confFill" style="width:'+a.confidence+'%"></div></div></div><div class="summaryMetric"><span>Beklenen gol</span><b>'+a.expectedGoals.home+' — '+a.expectedGoals.away+'</b><span>Toplam '+a.expectedGoals.total+(a.expectedGoals?.scenarioRange?' · Senaryo '+a.expectedGoals.scenarioRange.home[0]+'–'+a.expectedGoals.scenarioRange.home[1]+' / '+a.expectedGoals.scenarioRange.away[0]+'–'+a.expectedGoals.scenarioRange.away[1]:'')+'</span></div></div>'+(su.code==="skip"?'<div class="muted" style="margin-top:9px">'+esc(su.reason)+' · Sistem bu maçı otomatik kupona almaz.</div>':'')+'</div>'+iddaaStatusHtml(a)+lineupImpactHtml(a)+'<div class="miniTitle">Hızlı bakış</div><div class="quickPicks">'+quick.map(o=>'<button class="quickPick '+(sel.has(o.x.key)?"sel":"")+'" data-m="'+esc(o.x.key)+'"><small>'+esc(o.t)+'</small><strong>'+esc(o.x.label)+'</strong><b>%'+o.x.probability+'</b></button>').join("")+'</div>'+altHtml(a)+'<div class="miniTitle">Son 5 maç</div><div class="formbox">'+formRow(m.homeTeam.name,a.form?.home)+formRow(m.awayTeam.name,a.form?.away)+'</div>'+marketExplorerShell(a)+marketDetail(a.marketComparison)+riskHtml(a,sel)+'<details class="detail"><summary>Takım karşılaştırması <span class="detailHint">istatistikler</span></summary><div class="detailBody"><div class="stats">'+box(m.homeTeam.name,a.stats.home,a.context?.advanced?.home,a.context?.power?.home,a.context?.lineup?.home)+box(m.awayTeam.name,a.stats.away,a.context?.advanced?.away,a.context?.power?.away,a.context?.lineup?.away)+'</div></div></details><details class="detail"><summary>Neden bu sonuç? <span class="detailHint">kısa açıklama</span></summary><div class="detailBody"><div class="reasons"><ul>'+a.reasons.slice(0,5).map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>'+(a.riskFlags?.length?'<div class="muted" style="margin-top:8px">Risk: '+a.riskFlags.map(esc).join(" · ")+'</div>':'')+'</div><p class="muted">Model '+esc(a.modelVersion||"")+' · Backtest: '+(a.backtestMatches||0)+' maç'+(a.calibrated?' · Kalibrasyon aktif':' · Kalibrasyon veri topluyor')+' · Prop marketleri son '+(a.catalog?.propsSample||0)+' gelişmiş maç verisini kullanır.</p></div></details>';
+  $$("[data-m]").forEach(b=>b.onclick=()=>toggle(b.dataset.m));renderMarketExplorer()
+}
+function fallbackRisk(a,x){return Math.round(clamp(100-(Number(a.confidence||50)*.38+Number(a.dataQuality||50)*.24+Number(x.probability||50)*.24),15,90))}
+function findPick(a,k){return a.markets.find(z=>z.key===k)||catalogCats(a).flatMap(c=>c.items||[]).find(z=>z.key===k)||[...(a.exotic?.goals||[]),...(a.exotic?.htft||[]),...(a.exotic?.scorelines||[])].find(z=>z.key===k)}
+function toggle(k,marketOnly=false){
+  const m=st.match,a=st.analysis,x=findPick(a,k),idx=st.coupon.findIndex(p=>String(p.matchId)===String(m.id)&&p.marketKey===k);if(!x)return;
+  if(idx>=0)st.coupon.splice(idx,1);
+  else{
+    const pc=a.product?.pricedCandidates?.find(z=>z.key===k),id=x.iddaa?.available?x.iddaa:null,isFair=!id&&!pc&&x.fairOdds,modelProb=Number(x.probabilityRaw??Number(x.probability||0)/100),idFair=Number(id?.fairProbability),idEdge=id&&Number.isFinite(idFair)?modelProb-idFair:null;
+    st.coupon.push({matchId:m.id,match:m.homeTeam.name+" - "+m.awayTeam.name,league:league(m),marketKey:k,pick:x.label,probability:x.probability,decimal:id?.odd||pc?.decimal||(isFair?x.fairOdds:null),oddsType:id?"iddaa":pc?.oddsType|| (pc?"market":isFair?"model_fair":null),openDecimal:id?.movement?.firstOdd??pc?.openDecimal??null,oddsMovePct:id?.movement?.changePct??pc?.oddsMovePct??null,edge:idEdge??pc?.edge??null,risk:x.risk??pc?.risk??fallbackRisk(a,x),confidence:a.confidence,dataQuality:a.dataQuality,marketFamily:x.family||null,side:x.side||null,player:x.player||null,lineupStatus:x.lineupStatus||null,iddaaStatus:id?"open":null,iddaaEventId:id?.eventId||null,iddaaMarketId:id?.marketId||null,iddaaMarketName:id?.marketName||null,iddaaOutcomeNo:id?.outcomeNo??null,iddaaOutcomeName:id?.outcomeName||null,mbs:id?.mbs||null,startTimestamp:m.startTimestamp})
+  }
+  save();if(marketOnly)renderMarketExplorer();else renderAnalysis()
+}
+function couponHealthLocal(picks){
+  let odds=1,priced=0,fairOdds=1,fairCount=0,corr=0;const warnings=[],by=new Map();for(const p of picks){if(Number(p.decimal)>1){if(p.oddsType==="model_fair"){fairOdds*=Number(p.decimal);fairCount++}else{odds*=Number(p.decimal);priced++}}const k=String(p.matchId),a=by.get(k)||[];a.push(p);by.set(k,a)}
+  const maxMbs=picks.reduce((m,x)=>Math.max(m,Number(x.mbs||0)),0);for(const a of by.values())if(a.length>1){const ks=new Set(a.map(x=>x.marketKey)),res=["1","X","2"].filter(k=>ks.has(k)).length,iddaaCount=a.filter(x=>x.oddsType==="iddaa").length;if(iddaaCount>1)warnings.push("Aynı maçtan birden fazla ayrı İddaa marketi var; resmi kombo değilse birlikte kabul edilmeyebilir.");if((ks.has("O25")&&ks.has("U25"))||(ks.has("BTTS")&&ks.has("NBTTS"))||res>1){warnings.push("Aynı maçta çelişen seçim var");corr+=18}else if((ks.has("O25")&&ks.has("BTTS"))||(ks.has("U25")&&ks.has("NBTTS"))){warnings.push("Aynı maçta yüksek korelasyon var");corr+=12}else{warnings.push("Aynı maçtan birden fazla seçim var");corr+=8}}if(maxMbs>picks.length)warnings.push("MBS "+maxMbs+" nedeniyle en az "+maxMbs+" seçim gerekir.");
+  const high=picks.filter(x=>Number(x.risk||50)>=65).length;if(high>=2)warnings.push(high+" yüksek riskli seçim birlikte");if(priced===picks.length&&odds>15)warnings.push("Toplam oran çok yüksek; kupon oynaklığı artar");if(fairCount>0)warnings.push("Model adil oranlı seçimler gerçek bookmaker toplam oranına dahil edilmez");if(fairCount===picks.length&&fairOdds>80)warnings.push("Ekstrem model toplamı çok yüksek; gerçekleşme olasılığı düşüktür");
+  const avg=picks.length?picks.reduce((s,x)=>s+Number(x.risk||50),0)/picks.length:0,risk=Math.round(clamp(avg+Math.max(0,picks.length-2)*3+corr+(odds>10?5:0),0,95)),label=risk<=44?"Düşük":risk<=60?"Orta":risk<=75?"Yüksek":"Çok yüksek";
+  const mixedTotal=priced>0&&fairCount>0&&priced+fairCount===picks.length?(odds*fairOdds).toFixed(2):null;if(mixedTotal)warnings.push("Karma toplam yaklaşık değerdir; model-adil seçimler gerçek bookmaker oranı değildir.");
+  return {totalOdds:priced===picks.length&&picks.length?odds.toFixed(2):null,modelFairTotal:fairCount===picks.length&&picks.length?fairOdds.toFixed(2):null,mixedTotal,priced,fairCount,maxMbs,mbsSatisfied:maxMbs<=picks.length,risk,label,warnings:[...new Set(warnings)]}
+}
+const profileNames={manual:"Manuel",best:"En İyiler",custom:"Özel Kupon",low:"Düşük Risk",balanced:"Dengeli",high:"Yüksek Risk",extreme:"Ekstrem",series5:"Seri 5",series8:"Seri 8",marathon13:"Maraton 13",target3:"Hedef 3x",target5:"Hedef 5x",target10:"Hedef 10x",target20:"Hedef 20x"};
+function profileName(k){return profileNames[k]||k||"Manuel"}
+function saveTracked(){localStorage.setItem("kl-tracked",JSON.stringify(st.tracked));updateTrackCount()}
+function updateTrackCount(){const active=st.tracked.filter(c=>couponTrackStatus(c)==="active").length;$("#tc").textContent=active||st.tracked.length}
+function resultCode(h,a){return h>a?"1":h===a?"X":"2"}
+function countHit(key,prefix,value){if(value===null||value===undefined||!Number.isFinite(Number(value)))return null;const z=String(key).slice(prefix.length),under=z.startsWith("U"),n=Number(under?z.slice(1):z);if(!Number.isFinite(n))return null;return under?Number(value)<n:Number(value)>=n}
+function gradePick(p,s){
+  if(!s||!s.completed)return "pending";
+  const h=Number(s.homeScore),a=Number(s.awayScore);if(!Number.isFinite(h)||!Number.isFinite(a))return "unknown";
+  const k=String(p.marketKey||""),t=h+a,hs=s.stats?.home||{},as=s.stats?.away||{},num=(v)=>Number.isFinite(Number(v))?Number(v):null;let ok=null;
+  if(k==="1")ok=h>a;else if(k==="X")ok=h===a;else if(k==="2")ok=a>h;
+  else if(k==="O15")ok=t>=2;else if(k==="O25")ok=t>=3;else if(k==="U25")ok=t<=2;else if(k==="O35")ok=t>=4;
+  else if(k==="BTTS")ok=h>0&&a>0;else if(k==="NBTTS")ok=!(h>0&&a>0);
+  else if(k==="DC_1X")ok=h>=a;else if(k==="DC_X2")ok=a>=h;else if(k==="DC_12")ok=h!==a;
+  else if(k==="H_TG05")ok=h>=1;else if(k==="H_TG15")ok=h>=2;else if(k==="H_TG25")ok=h>=3;else if(k==="A_TG05")ok=a>=1;else if(k==="A_TG15")ok=a>=2;else if(k==="A_TG25")ok=a>=3;
+  else if(k==="C_1_BTTS")ok=h>a&&h>0&&a>0;else if(k==="C_2_BTTS")ok=a>h&&h>0&&a>0;else if(k==="C_1_NBTTS")ok=h>a&&!(h>0&&a>0);else if(k==="C_2_NBTTS")ok=a>h&&!(h>0&&a>0);
+  else if(k==="C_1_O15")ok=h>a&&t>=2;else if(k==="C_2_O15")ok=a>h&&t>=2;else if(k==="C_1_O25")ok=h>a&&t>=3;else if(k==="C_2_O25")ok=a>h&&t>=3;else if(k==="C_1_U35")ok=h>a&&t<=3;else if(k==="C_2_U35")ok=a>h&&t<=3;
+  else if(k==="C_1X_BTTS")ok=h>=a&&h>0&&a>0;else if(k==="C_X2_BTTS")ok=a>=h&&h>0&&a>0;else if(k==="C_1X_O15")ok=h>=a&&t>=2;else if(k==="C_X2_O15")ok=a>=h&&t>=2;else if(k==="C_1X_O25")ok=h>=a&&t>=3;else if(k==="C_X2_O25")ok=a>=h&&t>=3;else if(k==="C_BTTS_O25")ok=h>0&&a>0&&t>=3;
+  else if(k==="TG01")ok=t<=1;else if(k==="TG23")ok=t>=2&&t<=3;else if(k==="TG45")ok=t>=4&&t<=5;else if(k==="TG6P")ok=t>=6;
+  else if(k.startsWith("FH_")){const hh=Number(s.homeHalf),ha=Number(s.awayHalf);if(!Number.isFinite(hh)||!Number.isFinite(ha))return "unknown";const ft=hh+ha;if(k==="FH_1")ok=hh>ha;else if(k==="FH_X")ok=hh===ha;else if(k==="FH_2")ok=ha>hh;else if(k==="FH_O05")ok=ft>=1;else if(k==="FH_U05")ok=ft===0;else if(k==="FH_O15")ok=ft>=2;else if(k==="FH_BTTS")ok=hh>0&&ha>0;else if(k==="FH_H05")ok=hh>=1;else if(k==="FH_A05")ok=ha>=1}
+  else if(k.startsWith("HC_"))ok=countHit(k,"HC_",hs.corners);else if(k.startsWith("AC_"))ok=countHit(k,"AC_",as.corners);else if(k.startsWith("TC_"))ok=countHit(k,"TC_",num(hs.corners)!==null&&num(as.corners)!==null?num(hs.corners)+num(as.corners):null);
+  else if(k.startsWith("HS_"))ok=countHit(k,"HS_",hs.shots);else if(k.startsWith("AS_"))ok=countHit(k,"AS_",as.shots);else if(k.startsWith("TS_"))ok=countHit(k,"TS_",num(hs.shots)!==null&&num(as.shots)!==null?num(hs.shots)+num(as.shots):null);
+  else if(k.startsWith("HT_"))ok=countHit(k,"HT_",hs.sot);else if(k.startsWith("AT_"))ok=countHit(k,"AT_",as.sot);else if(k.startsWith("TT_"))ok=countHit(k,"TT_",num(hs.sot)!==null&&num(as.sot)!==null?num(hs.sot)+num(as.sot):null);
+  else if(k.startsWith("HYC_"))ok=countHit(k,"HYC_",hs.yellows);else if(k.startsWith("AYC_"))ok=countHit(k,"AYC_",as.yellows);else if(k.startsWith("YC_"))ok=countHit(k,"YC_",num(hs.yellows)!==null&&num(as.yellows)!==null?num(hs.yellows)+num(as.yellows):null);else if(k==="BOTH_CARD")ok=num(hs.yellows)!==null&&num(as.yellows)!==null&&num(hs.yellows)>=1&&num(as.yellows)>=1;
+  else if(k.startsWith("HF_"))ok=countHit(k,"HF_",hs.fouls);else if(k.startsWith("AF_"))ok=countHit(k,"AF_",as.fouls);else if(k.startsWith("TF_"))ok=countHit(k,"TF_",num(hs.fouls)!==null&&num(as.fouls)!==null?num(hs.fouls)+num(as.fouls):null);
+  else if(k.startsWith("HO_"))ok=countHit(k,"HO_",hs.offsides);else if(k.startsWith("AO_"))ok=countHit(k,"AO_",as.offsides);else if(k.startsWith("TO_"))ok=countHit(k,"TO_",num(hs.offsides)!==null&&num(as.offsides)!==null?num(hs.offsides)+num(as.offsides):null);else if(k.startsWith("HGK_"))ok=countHit(k,"HGK_",hs.saves);else if(k.startsWith("AGK_"))ok=countHit(k,"AGK_",as.saves);
+  else if(p.player&&p.marketFamily){const ps=(s.players||[]).find(x=>x.side===p.side&&x.name===p.player);if(!ps)return "unknown";if(p.marketFamily==="playerShots"){const z=k.match(/_S(\d+)$/);ok=z?num(ps.shots)>=Number(z[1]):null}else if(p.marketFamily==="playerSot"){const z=k.match(/_T(\d+)$/);ok=z?num(ps.sot)>=Number(z[1]):null}else if(p.marketFamily==="playerGoals")ok=num(ps.goals)>=1;else if(p.marketFamily==="playerAssists")ok=num(ps.assists)>=1;else if(p.marketFamily==="playerCards")ok=num(ps.cards)>=1;else if(p.marketFamily==="playerFouls"){const z=k.match(/_F(\d+)$/);ok=z?num(ps.fouls)>=Number(z[1]):null}else if(p.marketFamily==="playerOffsides")ok=num(ps.offsides)>=1;else if(p.marketFamily==="playerSaves"){const z=k.match(/_SV(\d+)$/);ok=z?num(ps.saves)>=Number(z[1]):null}}
+  else if(k.startsWith("CS_")){const z=k.split("_");ok=h===Number(z[1])&&a===Number(z[2])}
+  else if(k.startsWith("HTFT_")){const hh=Number(s.homeHalf),ha=Number(s.awayHalf);if(!Number.isFinite(hh)||!Number.isFinite(ha))return "unknown";const z=k.split("_");ok=resultCode(hh,ha)===z[1]&&resultCode(h,a)===z[2]}
+  return ok===null?"unknown":ok?"won":"lost"
+}
+function couponTrackStatus(c){
+  const g=(c.picks||[]).map(p=>p.result||"pending");if(g.includes("lost"))return "lost";if(g.length&&g.every(x=>x==="won"))return "won";return "active"
+}
+function inferCouponProfile(){
+  const ps=[...new Set(st.coupon.map(x=>x.couponProfile).filter(Boolean))];
+  return ps.length===1&&st.coupon.every(x=>x.couponProfile===ps[0])?ps[0]:"manual"
+}
+function saveCouponToTrack(){
+  if(!st.coupon.length)return;
+  const h=couponHealthLocal(st.coupon),profile=inferCouponProfile(),signature=st.coupon.map(x=>String(x.matchId)+":"+x.marketKey).sort().join("|"),now=new Date().toISOString();
+  const duplicate=st.tracked.find(x=>x.signature===signature&&Date.now()-new Date(x.createdAt).getTime()<3600000);
+  if(duplicate){$("#drawer").classList.remove("open");$("#scrim").classList.remove("on");openTracker();return}
+  st.tracked.unshift({id:String(Date.now()),createdAt:now,updatedAt:now,profile,signature,totalOdds:h.totalOdds,modelFairTotal:h.modelFairTotal,riskScore:h.risk,riskLabel:h.label,picks:JSON.parse(JSON.stringify(st.coupon)).map(p=>({...p,result:"pending",snapshot:null}))});
+  saveTracked();const b=$("#saveTrack");b.textContent="KAYDEDİLDİ ✓";setTimeout(()=>b.textContent="KUPONU KAYDET & TAKİP ET",1200);$("#drawer").classList.remove("open");$("#scrim").classList.remove("on");openTracker()
+}
+async function refreshTracked(){
+  if(!st.tracked.length){renderTracker();return}
+  const ids=[...new Set(st.tracked.flatMap(c=>(c.picks||[]).map(p=>String(p.matchId))))],map=new Map();
+  try{
+    for(let i=0;i<ids.length;i+=50){const d=await apiPost("/coupon-status",{eventIds:ids.slice(i,i+50)},25000);for(const e of d.events||[])map.set(String(e.eventId),e)}
+    for(const c of st.tracked){
+      for(const p of c.picks||[]){const s=map.get(String(p.matchId));if(s){p.snapshot=s;p.result=gradePick(p,s)}}
+      c.updatedAt=new Date().toISOString();c.status=couponTrackStatus(c)
+    }
+    saveTracked()
+  }catch(e){st.trackError=e.message}
+  renderTracker()
+}
+function trackIcon(r){return r==="won"?"✅":r==="lost"?"❌":r==="unknown"?"➖":"⏳"}
+function fmtDate(x){try{return new Intl.DateTimeFormat("tr-TR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(x))}catch{return ""}}
+function performance30(){
+  const cut=Date.now()-30*86400000,rows=st.tracked.filter(c=>new Date(c.createdAt).getTime()>=cut),groups=new Map();
+  for(const c of rows){const k=c.profile||"manual",g=groups.get(k)||{profile:k,coupons:0,wins:0,losses:0,active:0,pickWon:0,pickLost:0,odds:0,oddsN:0};g.coupons++;const s=couponTrackStatus(c);if(s==="won")g.wins++;else if(s==="lost")g.losses++;else g.active++;for(const p of c.picks||[]){if(p.result==="won")g.pickWon++;if(p.result==="lost")g.pickLost++}if(Number(c.totalOdds)>0){g.odds+=Number(c.totalOdds);g.oddsN++}groups.set(k,g)}
+  return groups
+}
+function renderTracker(){
+  updateTrackCount();const active=st.tracked.filter(c=>couponTrackStatus(c)==="active").length,resolved=st.tracked.filter(c=>["won","lost"].includes(couponTrackStatus(c))),wins=resolved.filter(c=>couponTrackStatus(c)==="won").length,rate=resolved.length?Math.round(100*wins/resolved.length):null,groups=performance30(),order=["low","balanced","high","extreme","series5","series8","marathon13","target3","target5","target10","target20","manual"];
+  const perfKeys=order.filter(k=>groups.has(k)||(k==="marathon13"&&st.tracked.length));
+  const perf=perfKeys.length?'<div class="miniTitle">Son 30 gün · kupon tipleri</div><div class="perfList">'+perfKeys.map(k=>{const g=groups.get(k);if(!g)return '<div class="perfRow"><div><strong>'+profileName(k)+'</strong><small>Henüz kaydedilmiş kupon yok</small></div><div class="perfRate">—</div></div>';const r=g.wins+g.losses?Math.round(100*g.wins/(g.wins+g.losses)):null,pa=g.pickWon+g.pickLost?Math.round(100*g.pickWon/(g.pickWon+g.pickLost)):null;return '<div class="perfRow"><div><strong>'+profileName(k)+'</strong><small>'+g.coupons+' kupon · '+g.wins+' kazandı · '+g.losses+' kaybetti'+(pa!=null?' · seçim %'+pa:'')+'</small></div><div class="perfRate">'+(r==null?'—':'%'+r)+'</div></div>'}).join("")+'</div>':'<div class="trackEmpty">Performans oluşması için önce bir kupon kaydet.</div>';
+  let list=st.tracked;if(st.trackFilter==="active")list=list.filter(c=>couponTrackStatus(c)==="active");if(st.trackFilter==="done")list=list.filter(c=>couponTrackStatus(c)!=="active");
+  const cards=list.length?'<div class="miniTitle">Kupon geçmişi</div><div class="trackList">'+list.map(c=>{const s=couponTrackStatus(c),sl=s==="won"?"Kazandı":s==="lost"?"Kaybetti":"Aktif",odds=c.totalOdds?c.totalOdds:c.modelFairTotal?"~"+c.modelFairTotal:"—",graded=(c.picks||[]).filter(p=>["won","lost"].includes(p.result)).length,won=(c.picks||[]).filter(p=>p.result==="won").length;return '<div class="trackCard"><div class="trackHead"><div><div class="muted">'+esc(profileName(c.profile))+' · '+fmtDate(c.createdAt)+'</div><strong>'+c.picks.length+' seçim · oran '+odds+' · risk '+c.riskScore+'/100</strong><div class="muted" style="margin-top:3px">'+graded+'/'+c.picks.length+' sonuçlandı'+(graded?' · '+won+' doğru':'')+'</div></div><span class="trackStatus '+s+'">'+sl+'</span></div><div class="trackPicks">'+c.picks.map(p=>{const sn=p.snapshot,score=sn?.completed&&sn.homeScore!=null?sn.homeScore+'-'+sn.awayScore:sn?.detail||"";return '<div class="trackPick"><em>'+trackIcon(p.result)+'</em><div><b>'+esc(p.match)+'</b><small>'+esc(p.pick)+(score?' · '+esc(score):'')+'</small></div><span>'+(p.decimal?(p.oddsType==="model_fair"?"~":"")+Number(p.decimal).toFixed(2):'')+'</span></div>'}).join("")+'</div><div class="trackTools"><button class="refreshTrack" data-refresh="'+c.id+'">SONUÇLARI YENİLE</button><button class="deleteTrack" data-deltrack="'+c.id+'">SİL</button></div></div>'}).join("")+'</div>':'<div class="trackEmpty">Bu filtrede kupon yok.</div>';
+  $("#trackerBody").innerHTML='<div class="trackStats"><div class="trackStat"><span>Aktif</span><b>'+active+'</b></div><div class="trackStat"><span>Sonuçlanan</span><b>'+resolved.length+'</b></div><div class="trackStat"><span>Kupon başarı</span><b>'+(rate==null?'—':'%'+rate)+'</b></div></div>'+perf+'<div class="trackTabs"><button class="trackTab '+(st.trackFilter==="all"?"on":"")+'" data-tf="all">Tümü</button><button class="trackTab '+(st.trackFilter==="active"?"on":"")+'" data-tf="active">Aktif</button><button class="trackTab '+(st.trackFilter==="done"?"on":"")+'" data-tf="done">Biten</button></div>'+(st.trackError?'<div class="warnItem">Sonuç yenileme: '+esc(st.trackError)+'</div>':'')+cards;
+  $$("[data-tf]").forEach(b=>b.onclick=()=>{st.trackFilter=b.dataset.tf;renderTracker()});$$("[data-deltrack]").forEach(b=>b.onclick=()=>{st.tracked=st.tracked.filter(x=>x.id!==b.dataset.deltrack);saveTracked();renderTracker()});$$("[data-refresh]").forEach(b=>b.onclick=()=>refreshTracked())
+}
+function openTracker(){lockPage();$("#trackerDlg").showModal();renderTracker();refreshTracked()}
+
+function b64urlJson(obj){
+  const bytes=new TextEncoder().encode(JSON.stringify(obj));let s="";for(const b of bytes)s+=String.fromCharCode(b);
+  return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")
+}
+function localNesinePayload(){
+  const official=st.coupon.filter(p=>(p.oddsType==="iddaa"||p.iddaaStatus==="open")&&p.iddaaEventId&&p.iddaaMarketId);
+  const invalid=st.coupon.filter(p=>!((p.oddsType==="iddaa"||p.iddaaStatus==="open")&&p.iddaaEventId&&p.iddaaMarketId));
+  const co=official.map(p=>({c:Number(p.iddaaEventId),m:Number(p.iddaaMarketId),o:Number(p.iddaaOutcomeNo)||null,on:p.iddaaOutcomeName||p.pick||"",mn:p.iddaaMarketName||"",odd:Number(p.decimal)||null,bs:p.banko?1:0}));
+  return {official,invalid,payload:co.length?b64urlJson({v:1,ts:Date.now(),co,s:"",m:1,mc:1}):null}
+}
+async function transferToNesine(){
+  if(!st.coupon.length)return;
+  const btn=$("#nesineTransfer"),box=$("#nesineStatus"),old=btn.textContent;btn.disabled=true;btn.textContent="HAZIRLANIYOR…";box.innerHTML="";
+  try{
+    const d=localNesinePayload();
+    if(d.invalid.length){
+      box.innerHTML='<div class="nesineState"><b>Aktarım hazır değil</b>'+d.official.length+'/'+st.coupon.length+' seçim gerçek İddaa marketine bağlı. '+d.invalid.length+' seçimde Nesine market kimliği yok.</div>';return
+    }
+    if(!d.payload){
+      box.innerHTML='<div class="nesineState"><b>Aktarım hazır değil</b>Bu kupondaki seçimlerde Nesine/İddaa market kimliği bulunamadı.</div>';return
+    }
+    const go=()=>{localStorage.setItem("kl-nesine-bridge","1");window.location.href="https://www.nesine.com/iddaa#kuponlab="+encodeURIComponent(d.payload)};
+    if(localStorage.getItem("kl-nesine-bridge")==="1"){go();return}
+    box.innerHTML='<div class="nesineState warn"><b>Bir kez Bridge kurulumu gerekiyor</b>'+d.official.length+' seçim hazır. Bu kurulumdan sonra NESİNE’DE AÇ tuşu backend kullanmadan seçimleri Nesine kuponuna otomatik ekler.<button id="bridgeSetup" class="nesineOpenFallback">BRIDGE KUR (1 KEZ)</button><button id="bridgeContinue" class="nesineOpenFallback">KURULU · ŞİMDİ AKTAR</button></div>';
+    $("#bridgeSetup").onclick=()=>{window.location.href="/nesine-bridge.html"};
+    $("#bridgeContinue").onclick=go
+  }catch(e){box.innerHTML='<div class="nesineState"><b>Aktarım hazırlanamadı</b>'+esc(e.message||String(e))+'</div>'}
+  finally{btn.disabled=!st.coupon.length;btn.textContent=old}
+}
+function save(){localStorage.setItem("kl-coupon",JSON.stringify(st.coupon));const ns=$("#nesineStatus");if(ns)ns.innerHTML="";coupon()}
+function comb(n,k){if(k<0||k>n)return 0;k=Math.min(k,n-k);let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r)}
+function systemHtml(picks){
+  const n=picks.length,b=picks.filter(x=>x.banko).length,free=n-b;if(n<4)return '';
+  const ks=[n-1,n-2,n-3].filter(k=>k>=2&&k>=b&&k-b<=free),rows=ks.map(k=>({k,cols:comb(free,k-b)})).filter(x=>x.cols>0);
+  if(!rows.length)return '';
+  return '<details class="systemBox"><summary style="display:flex;justify-content:space-between;gap:8px;cursor:pointer"><b>Sistem seçenekleri</b><span class="muted">'+b+' banko · '+n+' seçim</span></summary><div class="systemGrid">'+rows.map(x=>'<div class="systemItem"><span>Sistem '+x.k+'/'+n+'</span><strong>'+x.cols+' kolon</strong></div>').join("")+'</div><div class="muted" style="margin-top:7px">Kolon hesabıdır; kupon bedeli MBS/misli kurallarına göre değişebilir.</div></details>'
+}
+function coupon(){
+  const h=couponHealthLocal(st.coupon);$("#cc").textContent=$("#cc2").textContent=st.coupon.length;$("#saveTrack").disabled=!st.coupon.length;$("#nesineTransfer").disabled=!st.coupon.length;updateTrackCount();
+  const leftLabel=h.totalOdds?"Gerçek toplam oran":h.modelFairTotal?"Model adil toplam":h.mixedTotal?"Karma yaklaşık toplam":"Toplam oran",leftValue=h.totalOdds||h.modelFairTotal||h.mixedTotal||"—",approx=!!(h.modelFairTotal||h.mixedTotal);
+  $("#couponHealth").innerHTML=st.coupon.length?'<div class="couponHealth"><div class="healthTop"><div class="healthCell"><span>'+leftLabel+'</span><b>'+(approx?"~":"")+leftValue+'</b></div><div class="healthCell"><span>Kupon riski</span><b>'+h.risk+'/100 · '+h.label+'</b></div></div>'+(h.mixedTotal?'<div class="muted" style="margin-top:6px">'+h.priced+' gerçek oranlı · '+h.fairCount+' model-adil seçim. ~ toplam gerçek bookmaker kupon oranı değildir.</div>':h.modelFairTotal?'<div class="muted" style="margin-top:6px">~ Model adil oranıdır; bookmaker oranı değildir.</div>':'')+(h.warnings.length?'<div class="smartNotice"><b>Kupon notu</b><span>'+esc(h.warnings[0])+'</span></div>':'')+'</div>'+systemHtml(st.coupon):'';
+  $("#picks").innerHTML=st.coupon.length?st.coupon.map((p,i)=>'<div class="pick"><div class="muted">'+esc(p.league)+'</div><strong>'+esc(p.match)+'</strong><div><b>'+esc(p.pick)+' · %'+p.probability+(p.decimal?' · '+(p.oddsType==="model_fair"?"~":"")+Number(p.decimal).toFixed(2):'')+'</b> <button class="retry" data-r="'+i+'">Sil</button></div><div class="pickMeta"><span>Risk '+Math.round(Number(p.risk||50))+'/100</span>'+(p.oddsType==="model_fair"?'<span>Model adil oran</span>':p.oddsType==="iddaa"?'<span>İddaa oranı'+(p.mbs?' · MBS '+p.mbs:'')+'</span>':p.edge!=null?'<span>Model-piyasa '+(p.edge>=0?'+':'')+Math.round(p.edge*100)+'p</span>':'')+(p.openDecimal?'<span>'+Number(p.openDecimal).toFixed(2)+'→'+Number(p.decimal).toFixed(2)+'</span>':'')+'<button class="bankoBtn '+(p.banko?'on':'')+'" data-b="'+i+'">'+(p.banko?'BANKO ✓':'BANKO')+'</button></div></div>').join(""):'<div class="empty">Henüz seçim yok.</div>';
+  $$("[data-r]").forEach(b=>b.onclick=()=>{st.coupon.splice(+b.dataset.r,1);save()});$$("[data-b]").forEach(b=>b.onclick=()=>{const i=+b.dataset.b;st.coupon[i].banko=!st.coupon[i].banko;save()})
+}
+const extendedProfiles=new Set(["series5","series8","marathon13","target3","target5","target10","target20"]);
+async function ensureExtended(profile){
+  if(!extendedProfiles.has(profile)||st.longInsights||st.longLoading)return;
+  st.longLoading=true;renderSmart();
+  try{st.longInsights=await apiCached("/insights?date="+date(st.o)+"&extended=1",600000,75000)}
+  catch(e){st.longInsights={error:e.name==="AbortError"?"Geniş tarama zaman aşımına uğradı.":e.message}}
+  finally{st.longLoading=false;renderSmart()}
+}
+const smartGroupNames={result:"Sonuç",goals:"Gol",btts:"KG",combo:"Kombine",corners:"Korner",shots:"Şut",saves:"Kaleci",discipline:"Kart/Faul",player:"Oyuncu",standard:"Standart"};
+function smartSets(src,profile){if(profile==="custom")return Array.isArray(src?.sets)?src.sets:[];const a=src?.couponSets?.[profile];return Array.isArray(a)&&a.length?a:(src?.coupons?.[profile]?[src.coupons[profile]]:[])}
+function currentSmart(src,profile){const sets=smartSets(src,profile),i=(st.smartVariant[profile]||0)%Math.max(1,sets.length);return {sets,index:i,c:sets[i]||null}}
+function readCustom(){
+  const ci=$("#customCount"),ti=$("#customTarget");let c=Math.round(Number(ci?.value||st.customCount||8)),t=Number(ti?.value||st.customTarget||10);
+  c=Math.max(2,Math.min(20,c||8));t=Math.max(1.5,Math.min(5000,t||10));st.customCount=c;st.customTarget=+t.toFixed(2);if(ci)ci.value=c;if(ti)ti.value=st.customTarget;return {c,t:st.customTarget}
+}
+function updateCustomHint(){
+  const {c,t}=readCustom(),avg=Math.pow(t,c?1/c:1),el=$("#customHint");if(el)el.textContent=c+" maç · "+t+"x hedef · ort. ~"+avg.toFixed(2)
+}
+function nudgeCustom(kind,delta){
+  if(kind==="count"){const el=$("#customCount");el.value=Math.max(2,Math.min(20,Number(el.value||8)+delta))}
+  else{const el=$("#customTarget");el.value=Math.max(1.5,Math.min(5000,Number(el.value||10)+delta))}
+  updateCustomHint()
+}
+async function buildCustom(){
+  const {c,t}=readCustom();st.smartProfile="custom";st.smartVariant.custom=0;st.customLoading=true;st.customData=null;renderSmart();
+  try{st.customData=await apiCached("/custom-coupon?date="+date(st.o)+"&count="+c+"&target="+encodeURIComponent(t),600000,85000)}
+  catch(e){st.customData={sets:[],error:e.name==="AbortError"?"Özel kupon taraması zaman aşımına uğradı.":e.message}}
+  finally{st.customLoading=false;if(st.customData?.error)$("#smartBody").innerHTML='<div class="empty">'+esc(st.customData.error)+'</div>';else renderSmart()}
+}
+function renderSmart(){
+  const profile=st.smartProfile,isCustom=profile==="custom",isExtended=extendedProfiles.has(profile),src=isCustom?st.customData:(isExtended?st.longInsights:st.insights),names={low:"Düşük Risk",balanced:"Dengeli",high:"Yüksek Risk",extreme:"Ekstrem",custom:"Özel Kupon",series5:"Seri 5",series8:"Seri 8",marathon13:"Maraton 13",target3:"Hedef 3x",target5:"Hedef 5x",target10:"Hedef 10x",target20:"Hedef 20x"},isExtreme=profile==="extreme",isTarget=profile.startsWith("target");
+  $$(".smartTab").forEach(x=>x.classList.toggle("on",x.dataset.profile===profile));
+  if(isCustom&&st.customLoading){$("#smartBody").innerHTML='<div class="loading"><div class="spin"></div><b>'+st.customCount+' maç · '+st.customTarget+'x hedef için en yakın kupon aranıyor…</b></div>';return}
+  if(isExtended&&!st.longInsights){$("#smartBody").innerHTML='<div class="loading"><div class="spin"></div><b>Daha fazla oranlı maç taranıyor…</b></div>';ensureExtended(profile);return}
+  if(st.longInsights?.error&&isExtended){$("#smartBody").innerHTML='<div class="empty">'+esc(st.longInsights.error)+' <button id="retryLong" class="retry">Tekrar dene</button></div>';$("#retryLong").onclick=()=>{st.longInsights=null;ensureExtended(profile)};return}
+  if(isCustom&&!src){$("#smartBody").innerHTML='<div class="empty">Maç sayısı ve hedef oranı ayarla, sonra <b>Bu ayarla kupon oluştur</b> düğmesine bas.</div>';return}
+  if(!src){$("#smartBody").innerHTML='<div class="loading"><div class="spin"></div><b>Günlük tarama bekleniyor…</b></div>';return}
+  const cur=currentSmart(src,profile),sets=cur.sets,c=cur.c;if(!c?.picks?.length){$("#smartBody").innerHTML='<div class="empty">Bu ayarlarda yeterli kaliteli seçim bulunamadı.</div>';return}
+  const usesFair=!!c.modelFairTotal,usesMixed=!!c.mixedTotal,total=isCustom?c.achievedOdds:(usesMixed?c.mixedTotal:usesFair?(c.modelFairTotal||"—"):(c.totalOdds||"—")),totalLabel=isCustom?("Hedef "+c.target+"x → oluşan"):usesMixed?"Karma yaklaşık toplam":usesFair?"Model adil toplam":isTarget?"Oluşan toplam oran":"Toplam oran",goalCount=isCustom?c.count:profile==="series5"?5:profile==="series8"?8:profile==="marathon13"?13:null,done=isCustom?c.complete:isTarget?c.reached:c.complete,mix=c.mix||{},mixHtml=Object.entries(mix).map(([k,v])=>'<span class="mixPill">'+esc(smartGroupNames[k]||k)+' '+v+'</span>').join(""),countNote=isCustom?'<div class="muted" style="margin-top:6px">'+c.picks.length+'/'+c.count+' seçim · hedef farkı '+(Number(c.targetDeltaPct)>=0?'+':'')+c.targetDeltaPct+'% · seçim başına gerekli ortalama ~'+c.avgLeg+'</div>':goalCount?'<div class="muted" style="margin-top:6px">'+c.picks.length+'/'+goalCount+' kaliteli seçim bulundu.</div>':'';
+  $("#smartBody").innerHTML='<div class="smartToolbar"><div class="smartRecipe"><span>Bu tur</span><b>'+esc(c.recipe||("Alternatif "+(cur.index+1)))+'</b></div><button id="refreshSmart" class="refreshSmart" '+(sets.length<2?'disabled':'')+'>YENİLE ↻ · '+(cur.index+1)+'/'+sets.length+'</button></div>'+(mixHtml?'<div class="mixRow">'+mixHtml+'</div>':'')+'<div class="couponHealth"><div class="healthTop"><div class="healthCell"><span>'+names[profile]+' · '+totalLabel+'</span><b>'+(((isCustom&&c.fairCount)||usesFair||usesMixed)?"~":"")+total+'</b></div><div class="healthCell"><span>Kupon riski</span><b>'+c.riskScore+'/100 · '+esc(c.riskLabel)+'</b></div></div>'+(usesMixed?'<div class="muted" style="margin-top:6px">'+(c.pricedCount||0)+' gerçek oranlı · '+(c.fairCount||0)+' model-adil seçim. ~ toplam gerçek bookmaker kupon oranı değildir.</div>':usesFair?'<div class="muted" style="margin-top:6px">~ Model adil oranıdır; bookmaker oranı değildir.</div>':'')+countNote+(isTarget?'<div class="muted" style="margin-top:6px">Hedef '+c.target+'x · sistem düşük riskli gerçek oranlı seçimleri hedefe ulaşana kadar ekler.</div>':'')+(isExtreme?'<div class="muted" style="margin-top:6px">Ekstrem profil İY/MS, 4-5/6+ gol ve yüksek risk marketlerini kullanır.</div>':'')+((c.notes?.length||c.warnings?.length)?'<div class="smartNotice"><b>Kupon notu</b><span>'+esc([...(c.notes||[]),...(c.warnings||[])][0])+'</span></div>':'')+'</div><div class="miniTitle">'+c.picks.length+' seçim</div><div class="smartCouponList">'+c.picks.map(p=>'<div class="smartPick"><div class="smartPickTop"><div><div class="muted">'+esc(p.league)+'</div><strong>'+esc(p.match)+'</strong></div><b>'+(p.oddsType==="model_fair"?"~":"")+Number(p.decimal).toFixed(2)+'</b></div><div>'+esc(p.pick)+' · Model %'+p.probability+'</div><div class="pickMeta"><span>'+esc(smartGroupNames[p.marketGroup]||p.marketGroup||"Market")+'</span><span>Risk '+p.risk+'/100</span>'+(p.marketConfidence?'<span>Market güveni '+p.marketConfidence+'/100</span>':'')+(p.sample?'<span>'+p.sample+' maç</span>':'')+(p.lineupStatus?'<span>'+esc(p.lineupStatus)+'</span>':'')+(p.iddaaStatus==="open"?'<span>İddaa’da açık'+(p.mbs?' · MBS '+p.mbs:'')+'</span>':p.iddaaStatus==="market_type"?'<span>İddaa market türü</span>':'<span>Model marketi</span>')+(p.openDecimal&&Math.abs(Number(p.openDecimal)-Number(p.decimal))>.001?'<span>İlk '+Number(p.openDecimal).toFixed(2)+'→'+Number(p.decimal).toFixed(2)+'</span>':'')+(p.edge!=null&&Math.abs(Number(p.edge))>=.005?'<span>Ayrışma '+(Number(p.edge)>=0?'+':'')+Math.round(Number(p.edge)*100)+'p</span>':'')+'</div><div class="smartWhy">'+esc(p.why||"Model bu seçimi profil için uygun buldu.")+'</div><div style="margin-top:7px"><span class="smartSource '+(p.oddsType==="model_fair"?"fair":"real")+'">'+(p.oddsType==="model_fair"?"MODEL ADİL ORAN":p.oddsType==="iddaa"?"İDDAA ORANI":"PİYASA ORANI")+'</span></div></div>').join("")+'</div>'+(!done?'<div class="warnItem" style="margin-top:8px">'+(isTarget?'Hedef orana kaliteli seçimlerle ulaşılamadı.':'Hedef sayı kadar kaliteli seçim bulunamadı; sistem kuponu zorla doldurmadı.')+'</div>':'')+'<button id="applySmart" class="applySmart">BU KUPONU SEÇİMLERİME EKLE</button>';
+  const rb=$("#refreshSmart");if(rb)rb.onclick=()=>{if(sets.length<2)return;st.smartVariant[profile]=(cur.index+1)%sets.length;renderSmart()};
+  $("#applySmart").onclick=()=>{for(const p of c.picks)if(!st.coupon.some(x=>String(x.matchId)===String(p.matchId)&&x.marketKey===p.marketKey))st.coupon.push({...p,source:"smart",couponProfile:profile,banko:false});save();$("#smartDlg").close();$("#drawer").classList.add("open");$("#scrim").classList.add("on")}
+}
+function openSmart(){lockPage();$("#smartDlg").showModal();updateCustomHint();renderSmart()}
+
+$("#datePicker").onchange=e=>{const o=offsetFromDate(e.target.value);if(o>=0)selectDateOffset(o)};
+$$("[data-profile]").forEach(b=>b.onclick=()=>{st.smartProfile=b.dataset.profile;renderSmart()});
+$("#countMinus").onclick=()=>nudgeCustom("count",-1);$("#countPlus").onclick=()=>nudgeCustom("count",1);$("#targetMinus").onclick=()=>nudgeCustom("target",-1);$("#targetPlus").onclick=()=>nudgeCustom("target",1);$("#customCount").oninput=updateCustomHint;$("#customTarget").oninput=updateCustomHint;$("#buildCustom").onclick=buildCustom;
+$("#q").oninput=filter;$("#country").onchange=filter;retry.onclick=load;$("#openSmart").onclick=openSmart;$("#openBest").onclick=openBest;$("#openTracker").onclick=openTracker;$("#saveTrack").onclick=saveCouponToTrack;$("#nesineTransfer").onclick=transferToNesine;
+$$("[data-bestview]").forEach(b=>b.onclick=()=>setBestView(b.dataset.bestview));$$("[data-bestg]").forEach(b=>b.onclick=()=>{st.bestGroup=b.dataset.bestg;st.bestData=null;loadBest()});$$("[data-moveg]").forEach(b=>b.onclick=()=>{st.movesGroup=b.dataset.moveg;st.movesData=null;loadMoves()});$("#bestOdds").onchange=()=>{st.bestData=null;loadBest()};$("#bestRisk").onchange=()=>{st.bestData=null;loadBest()};
+$("#openCoupon").onclick=()=>{$("#drawer").classList.add("open");$("#scrim").classList.add("on")};
+$("#closeCoupon").onclick=$("#scrim").onclick=()=>{$("#drawer").classList.remove("open");$("#scrim").classList.remove("on")};
+$("#clear").onclick=()=>{st.coupon=[];save()};
+$("#closeDlg").onclick=()=>$("#dlg").close();$("#closeSmart").onclick=()=>$("#smartDlg").close();$("#closeBest").onclick=()=>$("#bestDlg").close();$("#closeTracker").onclick=()=>$("#trackerDlg").close();
+$("#dlg").addEventListener("close",unlockPage);$("#smartDlg").addEventListener("close",unlockPage);$("#bestDlg").addEventListener("close",unlockPage);$("#trackerDlg").addEventListener("close",unlockPage);
+coupon();renderTracker();load();
+</script>
+</body></html>
