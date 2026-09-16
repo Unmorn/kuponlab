@@ -155,7 +155,7 @@ export default {
         return json({
           ok: true,
           app: 'KuponLab',
-          cloudflareEdition: '5.6',
+          cloudflareEdition: '5.6.1',
           modelVersion: '5.2',
           database: hasDatabase() ? 'd1' : 'stateless',
           time: new Date().toISOString()

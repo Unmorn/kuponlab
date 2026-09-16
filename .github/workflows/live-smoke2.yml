@@ -19,13 +19,13 @@ jobs:
           BASE='https://kuponlab.talhaaltintas6110.workers.dev'
           for attempt in $(seq 1 30); do
             health="$(curl -fsS --max-time 15 "$BASE/api/_health" || true)"
-            if [ "$(echo "$health" | jq -r '.cloudflareEdition // empty' 2>/dev/null)" = '5.6' ]; then
+            if [ "$(echo "$health" | jq -r '.cloudflareEdition // empty' 2>/dev/null)" = '5.6.1' ]; then
               echo "$health" | jq '{ok,cloudflareEdition,modelVersion,database}'
               exit 0
             fi
             sleep 10
           done
-          echo 'Cloudflare v5.6 deployment was not visible in time.' >&2
+          echo 'Cloudflare v5.6.1 deployment was not visible in time.' >&2
           exit 1
 
       - name: Test live APIs and coupon CPU path

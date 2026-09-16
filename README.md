@@ -1,4 +1,4 @@
-# KuponLab v5.6 Cloudflare Edition
+# KuponLab v5.6.1 Cloudflare Edition
 
 KuponLab'ın telefondan kullanılabilen, Hatchable bağımlılığı kaldırılmış Cloudflare Workers sürümü.
 

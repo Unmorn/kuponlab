@@ -78,6 +78,5 @@ test("özel kupon varyantları Worker CPU bütçesine uygun sürede oluşur", ()
   const started = performance.now();
   for (let variant = 0; variant < 5; variant++) customCoupon(items, 12, 80, variant);
   const elapsed = performance.now() - started;
-  assert.ok(elapsed < 2_500, `kupon üretimi fazla yavaş: ${elapsed.toFixed(0)} ms`);
+  assert.ok(elapsed < 500, `kupon üretimi fazla yavaş: ${elapsed.toFixed(0)} ms`);
 });
-

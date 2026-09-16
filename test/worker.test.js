@@ -11,7 +11,7 @@ const call = (path, init) => worker.fetch(new Request("https://kuponlab.test" + 
 test("sağlık endpointi sürüm ve stateless durumunu verir", async () => {
   const response = await call("/api/_health");
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json().then(x => [x.ok, x.cloudflareEdition, x.database]), [true, "5.6", "stateless"]);
+  assert.deepEqual(await response.json().then(x => [x.ok, x.cloudflareEdition, x.database]), [true, "5.6.1", "stateless"]);
 });
 
 test("API yöntemleri ve bozuk JSON doğru HTTP kodlarını döndürür", async () => {
@@ -37,4 +37,3 @@ test("bilinmeyen API 404, statik istek asset binding üzerinden döner", async (
   assert.equal(asset.status, 200);
   assert.equal(await asset.text(), "asset");
 });
-
