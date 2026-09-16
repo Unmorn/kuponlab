@@ -4,20 +4,28 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Test deployed KuponLab
+      - name: Diagnose live KuponLab
+        shell: bash
         run: |
-          sleep 30
+          set -u
+          sleep 25
           BASE='https://kuponlab.talhaaltintas6110.workers.dev'
           DATE='2026-09-16'
-          curl -fsS --max-time 20 "$BASE/api/_health" | jq .
-          fixtures="$(curl -fsS --max-time 40 "$BASE/api/fixtures?date=$DATE")"
-          echo "$fixtures" | jq '{ok, source, eventCount:(.events|length), scheduled:([.events[]|select(.status.type=="scheduled")]|length)}'
+          echo '--- LIVE HEALTH ---'
+          curl -sS --max-time 20 "$BASE/api/_health" | jq .
+          echo '--- LIVE FIXTURES ---'
+          fixtures="$(curl -sS --max-time 40 "$BASE/api/fixtures?date=$DATE")"
+          echo "$fixtures" | jq '{ok,source,eventCount:(.events|length),scheduled:([.events[]|select(.status.type=="scheduled")]|length)}'
           event="$(echo "$fixtures" | jq -c '[.events[]|select(.status.type=="scheduled")][0]')"
-          test "$event" != "null"
+          echo "$event" | jq .
           home="$(echo "$event" | jq -r '.homeTeam.id')"
           away="$(echo "$event" | jq -r '.awayTeam.id')"
           ts="$(echo "$event" | jq -r '.startTimestamp')"
           event_id="$(echo "$event" | jq -r '.id')"
           source="$(echo "$event" | jq -r '.dataSource // "auto"')"
-          echo "$event" | jq '{match:(.homeTeam.name+" - "+.awayTeam.name),dataSource,startTimestamp}'
-          curl -fsS --max-time 60 "$BASE/api/analyze?home=$home&away=$away&ts=$ts&event=$event_id&source=$source" | jq '{ok, modelVersion:.analysis.modelVersion, confidence:.analysis.confidence, dataQuality:.analysis.dataQuality, stability:.analysis.stability, bestPick:.analysis.bestPick.label}'
+          echo '--- LIVE ANALYZE RAW ---'
+          curl -sS --max-time 60 -w '\nHTTP:%{http_code}\n' "$BASE/api/analyze?home=$home&away=$away&ts=$ts&event=$event_id&source=$source"
+          echo
+          echo '--- RAW ESPN EVENT ---'
+          raw="$(curl -sS --max-time 30 'https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=20260916')"
+          echo "$raw" | jq '.events[] | select(.id=="401914282") | {id,name,league,season,competitions:[.competitions[0]|{id,status,competitors:[.competitors[]|{id,homeAway,team:{id:.team.id,slug:.team.slug,uid:.team.uid,displayName:.team.displayName}}]}]}'
