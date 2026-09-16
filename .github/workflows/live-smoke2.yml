@@ -4,30 +4,43 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Diagnose KuponLab live behavior
+      - uses: actions/checkout@v4
+      - name: Check browser JavaScript syntax
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path("public/index.html").read_text()
+          blocks=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S|re.I)
+          Path("/tmp/inline.js").write_text("\n".join(blocks))
+          PY
+          node --check /tmp/inline.js
+          node --check worker.js
+          node --check api/compose-scan.js
+      - name: Test live distributed scan and coupon composer
         shell: bash
         run: |
           set -euo pipefail
           sleep 35
           BASE='https://kuponlab.talhaaltintas6110.workers.dev'
           DATE='2026-09-16'
-          fixtures="$(curl -sS --max-time 40 "$BASE/api/fixtures?date=$DATE")"
-          echo "$fixtures" | jq '{ok,source,eventCount:(.events|length),scheduled:([.events[]|select(.status.type=="scheduled")]|length)}'
-          for idx in 0 1; do
+          fixtures="$(curl -fsS --max-time 30 "$BASE/api/fixtures?date=$DATE")"
+          echo "$fixtures" | jq '{ok,eventCount:(.events|length)}'
+          echo '[]' > /tmp/items.json
+          for idx in 0 1 2 3; do
             event="$(echo "$fixtures" | jq -c "[.events[]|select(.status.type==\"scheduled\")][$idx]")"
-            home="$(echo "$event" | jq -r '.homeTeam.id')"
-            away="$(echo "$event" | jq -r '.awayTeam.id')"
-            ts="$(echo "$event" | jq -r '.startTimestamp')"
-            event_id="$(echo "$event" | jq -r '.id')"
-            source="$(echo "$event" | jq -r '.dataSource // "auto"')"
-            echo "MATCH $idx"
-            echo "$event" | jq '{match:(.homeTeam.name+" - "+.awayTeam.name),dataSource}'
-            analysis="$(curl -sS --max-time 70 "$BASE/api/analyze?home=$home&away=$away&ts=$ts&event=$event_id&source=$source")"
-            echo "$analysis" | jq '{ok,warnings,historySamples:.analysis.historySamples,dataWarnings:.analysis.dataWarnings,dataQuality:.analysis.dataQuality,confidence:.analysis.confidence,stability:.analysis.stability,lambdaHome:.analysis.expectedGoals.home,lambdaAway:.analysis.expectedGoals.away,bestPick:.analysis.bestPick.label,markets:[.analysis.markets[0:7][]|{key,probability}]}'
+            home="$(echo "$event"|jq -r '.homeTeam.id')"; away="$(echo "$event"|jq -r '.awayTeam.id')"
+            ts="$(echo "$event"|jq -r '.startTimestamp')"; eid="$(echo "$event"|jq -r '.id')"; src="$(echo "$event"|jq -r '.dataSource // "auto"')"
+            a="$(curl -fsS --max-time 70 "$BASE/api/analyze?home=$home&away=$away&ts=$ts&event=$eid&source=$src")"
+            echo "$a" | jq '{ok,match:(.analysis.context.teams // null),xg:.analysis.expectedGoals,best:.analysis.bestPick.label,samples:.analysis.historySamples}'
+            jq -n --argjson e "$event" --argjson a "$(echo "$a"|jq '.analysis')" '{event:$e,analysis:$a,marketComparison:($a.marketComparison//{available:false}),product:$a.product}' > /tmp/item.json
+            jq -s '.[0]+[.[1]]' /tmp/items.json /tmp/item.json > /tmp/items2.json && mv /tmp/items2.json /tmp/items.json
           done
-          echo '--- INSIGHTS ---'
-          curl -sS --max-time 120 "$BASE/api/insights?date=$DATE&extended=1" | jq '{ok,error,detail,summary,coupons,couponSetsCount:(.couponSets|keys|length)}'
-          echo '--- CUSTOM COUPON ---'
-          curl -sS --max-time 120 "$BASE/api/custom-coupon?date=$DATE&count=8&target=10" | jq '{ok,error,detail,availableMatches,setsCount:(.sets|length),coupon}'
-          echo '--- BEST PICKS ---'
-          curl -sS --max-time 120 "$BASE/api/best-picks?date=$DATE" | jq '{ok,error,detail,summary,picksCount:(.picks|length)}'
+          jq -n --arg date "$DATE" --argjson items "$(cat /tmp/items.json)" '{mode:"insights",date:$date,extended:true,totalFixtures:88,scheduled:86,items:$items}' > /tmp/body.json
+          curl -fsS --max-time 30 -H 'content-type: application/json' --data-binary @/tmp/body.json "$BASE/api/compose-scan" | tee /tmp/ins.json | jq '{ok,summary,couponProfiles:(.couponSets|keys)}'
+          test "$(jq -r '.summary.analyzed' /tmp/ins.json)" -ge 4
+          jq -n --arg date "$DATE" --argjson items "$(cat /tmp/items.json)" '{mode:"custom",date:$date,count:3,target:5,items:$items}' > /tmp/custom.json
+          curl -fsS --max-time 30 -H 'content-type: application/json' --data-binary @/tmp/custom.json "$BASE/api/compose-scan" | tee /tmp/custom-out.json | jq '{ok,availableMatches,setsCount:(.sets|length),pickCount:(.coupon.picks|length)}'
+          jq -n --arg date "$DATE" --argjson items "$(cat /tmp/items.json)" '{mode:"best",date:$date,totalFixtures:88,filters:{group:"all",minOdds:1.1,maxOdds:8,maxRisk:95,minProb:10,limit:10},items:$items}' > /tmp/best.json
+          curl -fsS --max-time 30 -H 'content-type: application/json' --data-binary @/tmp/best.json "$BASE/api/compose-scan" | tee /tmp/best-out.json | jq '{ok,summary,picksCount:(.picks|length)}'
