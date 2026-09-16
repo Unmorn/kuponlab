@@ -37,10 +37,10 @@ jobs:
             jq -n --argjson e "$event" --argjson a "$(echo "$a"|jq '.analysis')" '{event:$e,analysis:$a,marketComparison:($a.marketComparison//{available:false}),product:$a.product}' > /tmp/item.json
             jq -s '.[0]+[.[1]]' /tmp/items.json /tmp/item.json > /tmp/items2.json && mv /tmp/items2.json /tmp/items.json
           done
-          jq -n --arg date "$DATE" --argjson items "$(cat /tmp/items.json)" '{mode:"insights",date:$date,extended:true,totalFixtures:88,scheduled:86,items:$items}' > /tmp/body.json
+          jq -n --arg date "$DATE" --slurpfile items /tmp/items.json '{mode:"insights",date:$date,extended:true,totalFixtures:88,scheduled:86,items:$items[0]}' > /tmp/body.json
           curl -fsS --max-time 30 -H 'content-type: application/json' --data-binary @/tmp/body.json "$BASE/api/compose-scan" | tee /tmp/ins.json | jq '{ok,summary,couponProfiles:(.couponSets|keys)}'
           test "$(jq -r '.summary.analyzed' /tmp/ins.json)" -ge 4
-          jq -n --arg date "$DATE" --argjson items "$(cat /tmp/items.json)" '{mode:"custom",date:$date,count:3,target:5,items:$items}' > /tmp/custom.json
+          jq -n --arg date "$DATE" --slurpfile items /tmp/items.json '{mode:"custom",date:$date,count:3,target:5,items:$items[0]}' > /tmp/custom.json
           curl -fsS --max-time 30 -H 'content-type: application/json' --data-binary @/tmp/custom.json "$BASE/api/compose-scan" | tee /tmp/custom-out.json | jq '{ok,availableMatches,setsCount:(.sets|length),pickCount:(.coupon.picks|length)}'
-          jq -n --arg date "$DATE" --argjson items "$(cat /tmp/items.json)" '{mode:"best",date:$date,totalFixtures:88,filters:{group:"all",minOdds:1.1,maxOdds:8,maxRisk:95,minProb:10,limit:10},items:$items}' > /tmp/best.json
+          jq -n --arg date "$DATE" --slurpfile items /tmp/items.json '{mode:"best",date:$date,totalFixtures:88,filters:{group:"all",minOdds:1.1,maxOdds:8,maxRisk:95,minProb:10,limit:10},items:$items[0]}' > /tmp/best.json
           curl -fsS --max-time 30 -H 'content-type: application/json' --data-binary @/tmp/best.json "$BASE/api/compose-scan" | tee /tmp/best-out.json | jq '{ok,summary,picksCount:(.picks|length)}'
