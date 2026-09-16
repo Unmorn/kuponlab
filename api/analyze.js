@@ -8,11 +8,11 @@ import { attachLineupImpact } from "../lib/lineup.js";
 export const access="public";
 export const methods=["GET"];
 export default async function(req,res){
-  const home=Number(req.query.home),away=Number(req.query.away),ts=Number(req.query.ts)||Math.floor(Date.now()/1000),eventId=req.query.event?String(req.query.event):null;
+  const home=Number(req.query.home),away=Number(req.query.away),ts=Number(req.query.ts)||Math.floor(Date.now()/1000),eventId=req.query.event?String(req.query.event):null,source=String(req.query.source||"auto").toLowerCase();
   if(!home||!away)return res.status(400).json({ok:false,error:"Takım kimlikleri eksik."});
   try{
-    const [h,a,cal,performance]=await Promise.all([history(home,ts,10),history(away,ts,10),loadCalibration(),marketPerformanceSummary()]);
-    const context=await buildMatchContext(eventId,home,away,ts,h.events,a.events);
+    const [h,a,cal,performance]=await Promise.all([history(home,ts,10,source),history(away,ts,10,source),loadCalibration(),marketPerformanceSummary()]);
+    const context=await buildMatchContext(eventId,home,away,ts,h.events,a.events,source);
     const raw=build(home,away,h.events,a.events,ts,context),calibrated=applyCalibration(raw,cal.rows);
     let enriched=await enrichWithIddaa({...calibrated,backtestMatches:cal.total},context?.teams?.home||"",context?.teams?.away||"",ts);
     enriched=applyPerformanceToAnalysis(enriched,performance);if(eventId)enriched=await attachLineupImpact(eventId,ts,enriched);
