@@ -26,5 +26,5 @@ jobs:
           source="$(echo "$event" | jq -r '.dataSource // "auto"')"
           echo "$event" | jq '{match:(.homeTeam.name+" - "+.awayTeam.name),dataSource,startTimestamp}'
           analysis="$(curl -sS --max-time 70 "$BASE/api/analyze?home=$home&away=$away&ts=$ts&event=$event_id&source=$source")"
-          echo "$analysis" | jq '{ok,error,detail,modelVersion:.analysis.modelVersion,confidence:.analysis.confidence,dataQuality:.analysis.dataQuality,stability:.analysis.stability,bestPick:.analysis.bestPick.label}'
+          echo "$analysis" | jq '{ok,error,stage,detail,modelVersion:.analysis.modelVersion,confidence:.analysis.confidence,dataQuality:.analysis.dataQuality,stability:.analysis.stability,bestPick:.analysis.bestPick.label}'
           test "$(echo "$analysis" | jq -r '.ok')" = "true"
