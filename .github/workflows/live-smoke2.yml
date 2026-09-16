@@ -7,6 +7,17 @@ jobs:
       - name: Test deployed KuponLab
         run: |
           sleep 30
-          curl -fsS --max-time 20 'https://kuponlab.talhaaltintas6110.workers.dev/api/_health'
-          echo
-          curl -fsS --max-time 40 'https://kuponlab.talhaaltintas6110.workers.dev/api/fixtures?date=2026-09-16' | head -c 12000
+          BASE='https://kuponlab.talhaaltintas6110.workers.dev'
+          DATE='2026-09-16'
+          curl -fsS --max-time 20 "$BASE/api/_health" | jq .
+          fixtures="$(curl -fsS --max-time 40 "$BASE/api/fixtures?date=$DATE")"
+          echo "$fixtures" | jq '{ok, source, eventCount:(.events|length), scheduled:([.events[]|select(.status.type=="scheduled")]|length)}'
+          event="$(echo "$fixtures" | jq -c '[.events[]|select(.status.type=="scheduled")][0]')"
+          test "$event" != "null"
+          home="$(echo "$event" | jq -r '.homeTeam.id')"
+          away="$(echo "$event" | jq -r '.awayTeam.id')"
+          ts="$(echo "$event" | jq -r '.startTimestamp')"
+          event_id="$(echo "$event" | jq -r '.id')"
+          source="$(echo "$event" | jq -r '.dataSource // "auto"')"
+          echo "$event" | jq '{match:(.homeTeam.name+" - "+.awayTeam.name),dataSource,startTimestamp}'
+          curl -fsS --max-time 60 "$BASE/api/analyze?home=$home&away=$away&ts=$ts&event=$event_id&source=$source" | jq '{ok, modelVersion:.analysis.modelVersion, confidence:.analysis.confidence, dataQuality:.analysis.dataQuality, stability:.analysis.stability, bestPick:.analysis.bestPick.label}'
