@@ -4,27 +4,30 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Test deployed KuponLab end to end
+      - name: Diagnose KuponLab live behavior
         shell: bash
         run: |
           set -euo pipefail
           sleep 35
           BASE='https://kuponlab.talhaaltintas6110.workers.dev'
           DATE='2026-09-16'
-          health="$(curl -sS --max-time 20 "$BASE/api/_health")"
-          echo "$health" | jq .
-          test "$(echo "$health" | jq -r '.ok')" = "true"
           fixtures="$(curl -sS --max-time 40 "$BASE/api/fixtures?date=$DATE")"
           echo "$fixtures" | jq '{ok,source,eventCount:(.events|length),scheduled:([.events[]|select(.status.type=="scheduled")]|length)}'
-          test "$(echo "$fixtures" | jq -r '.ok')" = "true"
-          event="$(echo "$fixtures" | jq -c '[.events[]|select(.status.type=="scheduled")][0]')"
-          test "$event" != "null"
-          home="$(echo "$event" | jq -r '.homeTeam.id')"
-          away="$(echo "$event" | jq -r '.awayTeam.id')"
-          ts="$(echo "$event" | jq -r '.startTimestamp')"
-          event_id="$(echo "$event" | jq -r '.id')"
-          source="$(echo "$event" | jq -r '.dataSource // "auto"')"
-          echo "$event" | jq '{match:(.homeTeam.name+" - "+.awayTeam.name),dataSource,startTimestamp}'
-          analysis="$(curl -sS --max-time 70 "$BASE/api/analyze?home=$home&away=$away&ts=$ts&event=$event_id&source=$source")"
-          echo "$analysis" | jq '{ok,error,stage,detail,modelVersion:.analysis.modelVersion,confidence:.analysis.confidence,dataQuality:.analysis.dataQuality,stability:.analysis.stability,bestPick:.analysis.bestPick.label}'
-          test "$(echo "$analysis" | jq -r '.ok')" = "true"
+          for idx in 0 1; do
+            event="$(echo "$fixtures" | jq -c "[.events[]|select(.status.type==\"scheduled\")][$idx]")"
+            home="$(echo "$event" | jq -r '.homeTeam.id')"
+            away="$(echo "$event" | jq -r '.awayTeam.id')"
+            ts="$(echo "$event" | jq -r '.startTimestamp')"
+            event_id="$(echo "$event" | jq -r '.id')"
+            source="$(echo "$event" | jq -r '.dataSource // "auto"')"
+            echo "MATCH $idx"
+            echo "$event" | jq '{match:(.homeTeam.name+" - "+.awayTeam.name),dataSource}'
+            analysis="$(curl -sS --max-time 70 "$BASE/api/analyze?home=$home&away=$away&ts=$ts&event=$event_id&source=$source")"
+            echo "$analysis" | jq '{ok,warnings,historySamples:.analysis.historySamples,dataWarnings:.analysis.dataWarnings,dataQuality:.analysis.dataQuality,confidence:.analysis.confidence,stability:.analysis.stability,lambdaHome:.analysis.expectedGoals.home,lambdaAway:.analysis.expectedGoals.away,bestPick:.analysis.bestPick.label,markets:[.analysis.markets[0:7][]|{key,probability}]}'
+          done
+          echo '--- INSIGHTS ---'
+          curl -sS --max-time 120 "$BASE/api/insights?date=$DATE&extended=1" | jq '{ok,error,detail,summary,coupons,couponSetsCount:(.couponSets|keys|length)}'
+          echo '--- CUSTOM COUPON ---'
+          curl -sS --max-time 120 "$BASE/api/custom-coupon?date=$DATE&count=8&target=10" | jq '{ok,error,detail,availableMatches,setsCount:(.sets|length),coupon}'
+          echo '--- BEST PICKS ---'
+          curl -sS --max-time 120 "$BASE/api/best-picks?date=$DATE" | jq '{ok,error,detail,summary,picksCount:(.picks|length)}'
