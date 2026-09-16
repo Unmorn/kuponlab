@@ -382,7 +382,7 @@ function renderDateRail(){
 function selectDateOffset(o){if(!Number.isFinite(o)||o<0)return;st.o=Math.round(o);renderDateRail();load()}
 function tm(ts){return new Intl.DateTimeFormat("tr-TR",{hour:"2-digit",minute:"2-digit"}).format(new Date(ts*1000))}
 function country(e){return e.tournament?.category?.name||"Diğer"} function league(e){return e.tournament?.uniqueTournament?.name||e.tournament?.name||"Lig"}
-const API_CACHE_PREFIX="kl-api-v52:",apiInflight=new Map();
+const API_CACHE_PREFIX="kl-api-v55r2:",apiInflight=new Map();
 function apiCacheGet(path,ttl){try{const x=JSON.parse(localStorage.getItem(API_CACHE_PREFIX+path)||"null");if(!x||!x.t||Date.now()-x.t>ttl)return null;return {...x.d,_clientCached:true}}catch{return null}}
 function apiCacheSet(path,d){try{localStorage.setItem(API_CACHE_PREFIX+path,JSON.stringify({t:Date.now(),d}))}catch{}}
 async function api(path,ms=15000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(API+path,{signal:c.signal});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"İstek başarısız");return d}finally{clearTimeout(t)}}
