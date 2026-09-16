@@ -1,0 +1,39 @@
+name: Unpack KuponLab bundle
+
+on:
+  push:
+    paths:
+      - 'kuponlab-v55-cloudflare.b64'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Decode and unpack project
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 -d kuponlab-v55-cloudflare.b64 > kuponlab-v55-cloudflare.zip
+          unzip -o kuponlab-v55-cloudflare.zip
+          rm -f kuponlab-v55-cloudflare.b64 kuponlab-v55-cloudflare.zip
+
+      - name: Commit extracted project
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Import KuponLab v5.5 Cloudflare Edition"
+          git push
